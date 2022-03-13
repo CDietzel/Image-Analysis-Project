@@ -1,32 +1,14 @@
-import random
-from statistics import median, median_grouped
-from pathlib import Path
-
 import numpy as np
-import yaml
-from matplotlib import pyplot as plt
+
+# from matplotlib import pyplot as plt
 from numpy.random import default_rng
-from skimage import io
+
+# from skimage import io
 
 
 class ImageManipulator:
     def __init__(self):
         self._rng = default_rng(seed=42)
-
-    def to_grayscale(self, rgb_img, channel=None):
-        if channel is None:
-            gray_img = np.mean(rgb_img, axis=2)
-            gray_img = np.rint(gray_img)
-        elif channel == "R":
-            gray_img = rgb_img[:, :, 0]
-        elif channel == "G":
-            gray_img = rgb_img[:, :, 1]
-        elif channel == "B":
-            gray_img = rgb_img[:, :, 2]
-        else:
-            raise ValueError('channel must be "R", "G", "B", or None')
-        gray_img = gray_img.astype(int)
-        return gray_img
 
     def salt_pepper_noise(self, gray_img, ratio):
         noise = self._rng.choice(
@@ -58,7 +40,9 @@ class ImageManipulator:
         hist = hist.astype(int)
         return hist
 
-    def hist_equalization(self, gray_img, hist):
+    def hist_equalization(self, gray_img, hist=None):
+        if hist is None:
+            hist = self.calc_histogram(gray_img)
         bins = range(len(hist))
         hist = hist / np.sum(hist)
         cs = np.cumsum(hist)
@@ -120,25 +104,18 @@ class ImageManipulator:
         new_img = new_img.astype(int)
         return new_img
 
-    def mean_square_quantization_error(self, gray_img, quant_img):
-        error = quant_img - gray_img
-        square_error = np.square(error)
-        mean_square_error = np.mean(square_error)
-        return mean_square_error
 
-
-if __name__ == "__main__":
-    random.seed(42)
-    m = ImageManipulator()
-    img = io.imread("./Cancerous cell smears/cyl01.BMP")
-    img = m.to_grayscale(img)
-    # img = m.salt_pepper_noise(img, 0.01)
-    # img = m.gaussian_noise(img, 0, 10)
-    hist = m.calc_histogram(img)
-    img = m.hist_equalization(img, hist)
-    img2 = m.quantize_image(img, [7, 10, 100, 200, 213])
-    # img = m.linear_filter(img, np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]]), 9)
-    # img = m.median_filter(img, np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]]))
-    print(m.mean_square_quantization_error(img, img2))
-    plt.imshow(img)
-    plt.show()
+# if __name__ == "__main__":
+#     m = ImageManipulator()
+#     img = io.imread("./Cancerous cell smears/cyl01.BMP")
+#     img = m.to_grayscale(img)
+#     img = m.salt_pepper_noise(img, 0.01)
+#     img = m.gaussian_noise(img, 0, 10)
+#     hist = m.calc_histogram(img)
+#     img = m.hist_equalization(img, hist)
+#     img2 = m.quantize_image(img, [7, 10, 100, 200, 213])
+#     img = m.linear_filter(img, np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]]), 9)
+#     img = m.median_filter(img, np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]]))
+#     stat = m.mean_square_quantization_error(img, img2)
+#     plt.imshow(img)
+#     plt.show()
