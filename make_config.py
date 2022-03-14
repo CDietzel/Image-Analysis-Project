@@ -5,6 +5,7 @@ if __name__ == "__main__":
     config_dict["input_image_path"] = "./Cancerous cell smears"
     config_dict["output_image_path"] = "./Output images"
     config_dict["output_statistics_path"] = "./Output statistics"
+    config_dict["histogram_path"] = "./Output histograms"
     processing_steps = []
     # Processing Step Format:
     # The following dictionary key/value pairs can be added to a step dict, which is appended to the list processing_steps. You only need to add the keys/values that are relevant to a given function
@@ -22,6 +23,8 @@ if __name__ == "__main__":
     # "weights": [[1, 2, 1], [2, 3, 2], [1, 2, 1]] # 2D array of weights for median filter. Must all be nonnegative integers
 
     prefix_list = ["cyl", "inter", "let", "mod", "para", "super", "svar"]
+    # This second prefix list will only process the first image from each batch, to save computation time
+    # prefix_list = ["cyl01", "inter01", "let01", "mod01", "para01", "super01", "svar01"]
 
     for prefix in prefix_list:
 
@@ -50,6 +53,7 @@ if __name__ == "__main__":
         step = {}
         step["function"] = "calc_histogram"
         step["arg_batch_name"] = "batch1"
+        step["file_prefix"] = prefix + "_histogram"
         processing_steps.append(step)
 
         step = {}
@@ -84,6 +88,12 @@ if __name__ == "__main__":
         # step["return_batch_name"] = "batch7"
         # step["weights"] = [[1, 2, 1], [2, 3, 2], [1, 2, 1]]
         # processing_steps.append(step)
+
+        step = {}
+        step["function"] = "save_image_set"
+        step["arg_batch_name"] = "batch1"
+        step["file_prefix"] = prefix + "_greyscale"
+        processing_steps.append(step)
 
         step = {}
         step["function"] = "save_image_set"
@@ -130,4 +140,4 @@ if __name__ == "__main__":
 
     config_file_to_save = "./config.yaml"
     with open(config_file_to_save, "w") as file:
-        yaml.dump(config_dict, file)
+        yaml.dump(config_dict, file, default_flow_style=None)

@@ -4,6 +4,7 @@ import time
 from pathlib import Path
 
 import numpy as np
+from matplotlib import pyplot as plt
 import yaml
 from skimage import io
 
@@ -32,6 +33,10 @@ class BatchProcessor:
         Path(stats_path).mkdir(parents=True, exist_ok=True)
         for f in os.listdir(stats_path):
             os.remove(os.path.join(stats_path, f))
+        hist_path = self._config["histogram_path"]
+        Path(hist_path).mkdir(parents=True, exist_ok=True)
+        for f in os.listdir(hist_path):
+            os.remove(os.path.join(hist_path, f))
 
     def set_config(self, config_file):
         with open(config_file, "r") as file:
@@ -69,7 +74,7 @@ class BatchProcessor:
                 image_list = self._image_sets[batch_name]
                 for i, image in enumerate(image_list):
                     out_path = os.path.join(save_path, prefix + str(i) + ".BMP")
-                    img = io.imsave(out_path, image)
+                    io.imsave(out_path, image)
 
             elif function_name == "save_statistics":
                 out_path = self._config["output_statistics_path"]
@@ -124,6 +129,8 @@ class BatchProcessor:
                 self._statistics.append(stats_data)
             elif function_name == "calc_histogram":
                 batch_name = step["arg_batch_name"]
+                hist_path = self._config["histogram_path"]
+                prefix = step["file_prefix"]
                 image_list = self._image_sets[batch_name]
                 new_hist_list = []
                 runtime_list = []
@@ -138,11 +145,17 @@ class BatchProcessor:
                 stats = {
                     "entire_batch_runtime": batch_elapsed,
                     "avg_image_runtime": avg_runtime,
-                    "batch_avg_histogram": new_avg_hist,
-                    "each_img_histogram": new_hist_list,
                 }
                 stats_data = [function_name, stats]
                 self._statistics.append(stats_data)
+                out_path = os.path.join(hist_path, prefix + str(0) + ".png")
+                plt.bar(range(256), new_hist_list[0], width=1)
+                plt.savefig(out_path)
+                plt.clf()
+                out_path = os.path.join(hist_path, "avg_" + prefix + ".png")
+                plt.bar(range(256), new_avg_hist, width=1)
+                plt.savefig(out_path)
+                plt.clf()
 
             elif function_name == "hist_equalization":
                 batch_name = step["arg_batch_name"]
