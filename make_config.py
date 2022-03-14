@@ -1,4 +1,3 @@
-import numpy as np
 import yaml
 
 if __name__ == "__main__":
@@ -8,7 +7,7 @@ if __name__ == "__main__":
     config_dict["output_statistics_path"] = "./Output statistics"
     processing_steps = []
     # Processing Step Format:
-    # The following dictionary key/value pairs can be added to a step dict, which is appended to the list processing_steps. You only need to add the keys that are relevant to a given function
+    # The following dictionary key/value pairs can be added to a step dict, which is appended to the list processing_steps. You only need to add the keys/values that are relevant to a given function
     # "function": "function_name" # This is the function name of the function to be called
     # "arg_batch_name": "batch1" this is the key to use to store that functions input batch name
     # "return_batch_name": "batch1" # This is the dictionary key to store that function's batched return values in
@@ -18,18 +17,117 @@ if __name__ == "__main__":
     # "mean": 0 # float, mean of gaussian noise to add to image
     # "std": 10 # float, must be positive, standard deviation of noise to add to image
     # "thresholds": [0, 10, 100, 200, 256] # List of threshold edges for use in quantizing. Must be increasing, and first and last value must be 0 and 256 respectively
-    # "filter": np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]]) # 2D numpy array of weights for linear filter. Must all be integers
+    # "filter": [[1, 1, 1], [1, 1, 1], [1, 1, 1]] # 2D array of weights for linear filter. Must all be integers
     # "scale": 9 # scaling factor for linear filter (divide each fliter sum by this value)
-    # "weights": np.array([[1, 2, 1], [2, 3, 2], [1, 2, 1]]) # 2D numpy array of weights for median filter. Must all be nonnegative integers
-    step = {}
-    step["function"] = "gaussian_noise"
-    step["arg_batch_name"] = "batch1"
-    step["return_batch_name"] = "batch2"
-    step["mean"] = 0
-    step["std"] = 10
-    processing_steps.append(step)
+    # "weights": [[1, 2, 1], [2, 3, 2], [1, 2, 1]] # 2D array of weights for median filter. Must all be nonnegative integers
+
+    prefix_list = ["cyl", "inter", "let", "mod", "para", "super", "svar"]
+
+    for prefix in prefix_list:
+
+        step = {}
+        step["function"] = "load_image_set"
+        step["return_batch_name"] = "batch1"
+        step["file_prefix"] = prefix
+        step["channel"] = None
+        processing_steps.append(step)
+
+        step = {}
+        step["function"] = "salt_pepper_noise"
+        step["arg_batch_name"] = "batch1"
+        step["return_batch_name"] = "batch2"
+        step["ratio"] = 0.1
+        processing_steps.append(step)
+
+        step = {}
+        step["function"] = "gaussian_noise"
+        step["arg_batch_name"] = "batch1"
+        step["return_batch_name"] = "batch3"
+        step["mean"] = 0
+        step["std"] = 20
+        processing_steps.append(step)
+
+        step = {}
+        step["function"] = "calc_histogram"
+        step["arg_batch_name"] = "batch1"
+        processing_steps.append(step)
+
+        step = {}
+        step["function"] = "hist_equalization"
+        step["arg_batch_name"] = "batch1"
+        step["return_batch_name"] = "batch4"
+        processing_steps.append(step)
+
+        step = {}
+        step["function"] = "quantize_image"
+        step["arg_batch_name"] = "batch1"
+        step["return_batch_name"] = "batch5"
+        step["thresholds"] = [0, 50, 100, 150, 200, 256]
+        processing_steps.append(step)
+
+        # NOTE: linear filtering and median filtering have been commented out,
+        # becasue they are really damn slow. I don't know how to make it faster. Sorry.
+        # They do work, though. But median filter especially takes literally
+        # minutes to compute one image. Its stupid.
+
+        # step = {}
+        # step["function"] = "linear_filter" # Commented out
+        # step["arg_batch_name"] = "batch1"
+        # step["return_batch_name"] = "batch6"
+        # step["filter"] = [[1, 1, 1], [1, 1, 1], [1, 1, 1]]
+        # step["scale"] = 9
+        # processing_steps.append(step)
+
+        # step = {}
+        # step["function"] = "median_filter"
+        # step["arg_batch_name"] = "batch1"
+        # step["return_batch_name"] = "batch7"
+        # step["weights"] = [[1, 2, 1], [2, 3, 2], [1, 2, 1]]
+        # processing_steps.append(step)
+
+        step = {}
+        step["function"] = "save_image_set"
+        step["arg_batch_name"] = "batch2"
+        step["file_prefix"] = prefix + "_salt_pepper"
+        processing_steps.append(step)
+
+        step = {}
+        step["function"] = "save_image_set"
+        step["arg_batch_name"] = "batch3"
+        step["file_prefix"] = prefix + "_gaussian"
+        processing_steps.append(step)
+
+        step = {}
+        step["function"] = "save_image_set"
+        step["arg_batch_name"] = "batch4"
+        step["file_prefix"] = prefix + "_hist_eq"
+        processing_steps.append(step)
+
+        step = {}
+        step["function"] = "save_image_set"
+        step["arg_batch_name"] = "batch5"
+        step["file_prefix"] = prefix + "_quantized"
+        processing_steps.append(step)
+
+        # step = {}
+        # step["function"] = "save_image_set"
+        # step["arg_batch_name"] = "batch6"
+        # step["file_prefix"] = prefix + "_lin_filt"
+        # processing_steps.append(step)
+
+        # step = {}
+        # step["function"] = "save_image_set"
+        # step["arg_batch_name"] = "batch7"
+        # step["file_prefix"] = prefix + "_med_filt"
+        # processing_steps.append(step)
+
+        step = {}
+        step["function"] = "save_statistics"
+        step["file_prefix"] = prefix + "_stats"
+        processing_steps.append(step)
+
     config_dict["processing_steps"] = processing_steps
 
-    config_file_to_save = "./example_config.yaml"
+    config_file_to_save = "./config.yaml"
     with open(config_file_to_save, "w") as file:
         yaml.dump(config_dict, file)

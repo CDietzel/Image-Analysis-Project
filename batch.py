@@ -1,13 +1,19 @@
-import random
+import os
+import statistics
+import time
 from pathlib import Path
-from statistics import median, median_grouped
 
 import numpy as np
 import yaml
-from matplotlib import pyplot as plt
-from numpy.random import default_rng
 from skimage import io
+
 from manip import ImageManipulator
+
+
+def main():
+    config_file_path = "./config.yaml"
+    b = BatchProcessor(config_file=config_file_path)
+    b.process()
 
 
 class BatchProcessor:
@@ -16,32 +22,228 @@ class BatchProcessor:
             with open(config_file, "r") as file:
                 self._config = yaml.safe_load(file)
         self._image_sets = {}
-        self._statistics = {}
+        self._statistics = []
+        self._m = ImageManipulator()
+        save_path = self._config["output_image_path"]
+        Path(save_path).mkdir(parents=True, exist_ok=True)
+        for f in os.listdir(save_path):
+            os.remove(os.path.join(save_path, f))
+        stats_path = self._config["output_statistics_path"]
+        Path(stats_path).mkdir(parents=True, exist_ok=True)
+        for f in os.listdir(stats_path):
+            os.remove(os.path.join(stats_path, f))
 
     def set_config(self, config_file):
         with open(config_file, "r") as file:
             self._config = yaml.safe_load(file)
 
     def process(self):
-        pass
+        steps = self._config["processing_steps"]
+        for step in steps:
+            batch_start_time = time.time()
+            function_name = step["function"]
 
-    def load_image_set(self, arg_batch_name, file_prefix=None, channel=None):
-        # load in all image files beginning with file_prefix in self._config["input_image_path"]
-        # convert them to greyscale using channel
-        # store the list in self._image_sets with key arg_batch_name
-        pass
+            if function_name == "load_image_set":
+                in_path = self._config["input_image_path"]
+                prefix = step["file_prefix"]
+                channel = step["channel"]
+                return_name = step["return_batch_name"]
+                file_path_list = []
+                for file in os.listdir(in_path):
+                    if file.startswith(prefix) and file != "super45.BMP":
+                        # super45.BMP is a corrupted image file,
+                        # so it doesn't load properly.
+                        # Therefore, skip it.
+                        file_path_list.append(os.path.join(in_path, file))
+                image_list = []
+                for path in file_path_list:
+                    img = io.imread(path)
+                    img = self._to_grayscale(img, channel)
+                    image_list.append(img)
+                self._image_sets[return_name] = image_list
 
-    def save_image_set(self, arg_batch_name, file_prefix=None):
-        # save all images that are in self._image_sets with key arg_batch_name
-        # store the files in self._config["output_image_path"]
-        # the filename of each is file_prefix+number.BMP (the numbers should increment)
-        pass
+            elif function_name == "save_image_set":
+                save_path = self._config["output_image_path"]
+                prefix = step["file_prefix"]
+                batch_name = step["arg_batch_name"]
+                image_list = self._image_sets[batch_name]
+                for i, image in enumerate(image_list):
+                    out_path = os.path.join(save_path, prefix + str(i) + ".BMP")
+                    img = io.imsave(out_path, image)
 
-    def save_statistics(self, arg_batch_name, file_prefix=None):
-        # save all statistics that are in self._statistics with key arg_batch_name
-        # store the files in self._config["output_statistics_path"]
-        # the filename of each is file_prefix+number.yaml (the numbers should increment)
-        pass
+            elif function_name == "save_statistics":
+                out_path = self._config["output_statistics_path"]
+                prefix = step["file_prefix"]
+                out_path = os.path.join(out_path, prefix + ".yaml")
+                with open(out_path, "w") as file:
+                    yaml.dump(self._statistics, file, default_flow_style=None)
+
+            elif function_name == "salt_pepper_noise":
+                batch_name = step["arg_batch_name"]
+                return_name = step["return_batch_name"]
+                ratio = step["ratio"]
+                image_list = self._image_sets[batch_name]
+                new_image_list = []
+                runtime_list = []
+                for image in image_list:
+                    image_start_time = time.time()
+                    new_image_list.append(self._m.salt_pepper_noise(image, ratio))
+                    image_elapsed = time.time() - image_start_time
+                    runtime_list.append(image_elapsed)
+                self._image_sets[return_name] = new_image_list
+                batch_elapsed = time.time() - batch_start_time
+                avg_runtime = statistics.mean(runtime_list)
+                stats = {
+                    "entire_batch_runtime": batch_elapsed,
+                    "avg_image_runtime": avg_runtime,
+                }
+                stats_data = [function_name, stats]
+                self._statistics.append(stats_data)
+
+            elif function_name == "gaussian_noise":
+                batch_name = step["arg_batch_name"]
+                return_name = step["return_batch_name"]
+                mean = step["mean"]
+                std = step["std"]
+                image_list = self._image_sets[batch_name]
+                new_image_list = []
+                runtime_list = []
+                for image in image_list:
+                    image_start_time = time.time()
+                    new_image_list.append(self._m.gaussian_noise(image, mean, std))
+                    image_elapsed = time.time() - image_start_time
+                    runtime_list.append(image_elapsed)
+                self._image_sets[return_name] = new_image_list
+                batch_elapsed = time.time() - batch_start_time
+                avg_runtime = statistics.mean(runtime_list)
+                stats = {
+                    "entire_batch_runtime": batch_elapsed,
+                    "avg_image_runtime": avg_runtime,
+                }
+                stats_data = [function_name, stats]
+                self._statistics.append(stats_data)
+            elif function_name == "calc_histogram":
+                batch_name = step["arg_batch_name"]
+                image_list = self._image_sets[batch_name]
+                new_hist_list = []
+                runtime_list = []
+                for image in image_list:
+                    image_start_time = time.time()
+                    new_hist_list.append(self._m.calc_histogram(image).tolist())
+                    image_elapsed = time.time() - image_start_time
+                    runtime_list.append(image_elapsed)
+                new_avg_hist = self._m.avg_histograms(new_hist_list).tolist()
+                batch_elapsed = time.time() - batch_start_time
+                avg_runtime = statistics.mean(runtime_list)
+                stats = {
+                    "entire_batch_runtime": batch_elapsed,
+                    "avg_image_runtime": avg_runtime,
+                    "batch_avg_histogram": new_avg_hist,
+                    "each_img_histogram": new_hist_list,
+                }
+                stats_data = [function_name, stats]
+                self._statistics.append(stats_data)
+
+            elif function_name == "hist_equalization":
+                batch_name = step["arg_batch_name"]
+                return_name = step["return_batch_name"]
+                image_list = self._image_sets[batch_name]
+                new_image_list = []
+                runtime_list = []
+                for image in image_list:
+                    image_start_time = time.time()
+                    new_image_list.append(self._m.hist_equalization(image))
+                    image_elapsed = time.time() - image_start_time
+                    runtime_list.append(image_elapsed)
+                self._image_sets[return_name] = new_image_list
+                batch_elapsed = time.time() - batch_start_time
+                avg_runtime = statistics.mean(runtime_list)
+                stats = {
+                    "entire_batch_runtime": batch_elapsed,
+                    "avg_image_runtime": avg_runtime,
+                }
+                stats_data = [function_name, stats]
+                self._statistics.append(stats_data)
+
+            elif function_name == "quantize_image":
+                batch_name = step["arg_batch_name"]
+                return_name = step["return_batch_name"]
+                thresholds = step["thresholds"]
+                image_list = self._image_sets[batch_name]
+                new_image_list = []
+                runtime_list = []
+                msqe_list = []
+                for image in image_list:
+                    image_start_time = time.time()
+                    quant_img = self._m.quantize_image(image, thresholds)
+                    image_elapsed = time.time() - image_start_time
+                    new_image_list.append(quant_img)
+                    msqe_list.append(
+                        self._mean_square_quantization_error(image, quant_img)
+                    )
+                    runtime_list.append(image_elapsed)
+                self._image_sets[return_name] = new_image_list
+                batch_elapsed = time.time() - batch_start_time
+                avg_runtime = statistics.mean(runtime_list)
+                avg_msqe = float(statistics.mean(msqe_list))
+                stats = {
+                    "entire_batch_runtime": batch_elapsed,
+                    "avg_image_runtime": avg_runtime,
+                    "avg_msqe": avg_msqe,
+                }
+                stats_data = [function_name, stats]
+                self._statistics.append(stats_data)
+
+            elif function_name == "linear_filter":
+                batch_name = step["arg_batch_name"]
+                return_name = step["return_batch_name"]
+                filter = step["filter"]
+                scale = step["scale"]
+                image_list = self._image_sets[batch_name]
+                new_image_list = []
+                runtime_list = []
+                for image in image_list:
+                    image_start_time = time.time()
+                    new_image_list.append(self._m.linear_filter(image, filter, scale))
+                    image_elapsed = time.time() - image_start_time
+                    runtime_list.append(image_elapsed)
+                self._image_sets[return_name] = new_image_list
+                batch_elapsed = time.time() - batch_start_time
+                avg_runtime = statistics.mean(runtime_list)
+                stats = {
+                    "entire_batch_runtime": batch_elapsed,
+                    "avg_image_runtime": avg_runtime,
+                }
+                stats_data = [function_name, stats]
+                self._statistics.append(stats_data)
+
+            elif function_name == "median_filter":
+                batch_name = step["arg_batch_name"]
+                return_name = step["return_batch_name"]
+                weights = step["weights"]
+                image_list = self._image_sets[batch_name]
+                new_image_list = []
+                runtime_list = []
+                for image in image_list:
+                    image_start_time = time.time()
+                    new_image_list.append(self._m.median_filter(image, weights))
+                    image_elapsed = time.time() - image_start_time
+                    runtime_list.append(image_elapsed)
+                self._image_sets[return_name] = new_image_list
+                batch_elapsed = time.time() - batch_start_time
+                avg_runtime = statistics.mean(runtime_list)
+                stats = {
+                    "entire_batch_runtime": batch_elapsed,
+                    "avg_image_runtime": avg_runtime,
+                }
+                stats_data = [function_name, stats]
+                self._statistics.append(stats_data)
+
+            else:
+                raise ValueError(
+                    "'function' string was invalid!\
+                         Please choose one of the options in batch.py."
+                )
 
     def _to_grayscale(self, rgb_img, channel):
         if channel is None:
@@ -55,7 +257,7 @@ class BatchProcessor:
             gray_img = rgb_img[:, :, 2]
         else:
             raise ValueError('channel must be "R", "G", "B", or None')
-        gray_img = gray_img.astype(int)
+        gray_img = gray_img.astype(np.uint8)
         return gray_img
 
     def _mean_square_quantization_error(self, gray_img, quant_img):
@@ -63,3 +265,7 @@ class BatchProcessor:
         square_error = np.square(error)
         mean_square_error = np.mean(square_error)
         return mean_square_error
+
+
+if __name__ == "__main__":
+    main()

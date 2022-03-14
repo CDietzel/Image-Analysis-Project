@@ -1,9 +1,5 @@
 import numpy as np
-
-# from matplotlib import pyplot as plt
 from numpy.random import default_rng
-
-# from skimage import io
 
 
 class ImageManipulator:
@@ -15,7 +11,7 @@ class ImageManipulator:
             [-1, 0, 255], size=gray_img.shape, p=[1 - ratio, ratio / 2, ratio / 2]
         )
         np.copyto(noise, gray_img, where=noise == -1)
-        gray_img = noise.astype(int)
+        gray_img = noise.astype(np.uint8)
         return gray_img
 
     def gaussian_noise(self, gray_img, mean, std):
@@ -23,21 +19,21 @@ class ImageManipulator:
         gray_img = gray_img + noise
         gray_img = np.clip(gray_img, 0, 255)
         gray_img = np.rint(gray_img)
-        gray_img = gray_img.astype(int)
+        gray_img = gray_img.astype(np.uint8)
         return gray_img
 
     def calc_histogram(self, gray_img):
         hist = np.zeros(256)
         for i in range(len(hist)):
             hist[i] = np.sum(gray_img == i)
-        hist = hist.astype(int)
+        hist = hist.astype(np.uint8)
         return hist
 
     def avg_histograms(self, hist_list):
         hist_arr = np.array(hist_list)
         hist = np.mean(hist_arr, axis=0)
         hist = np.rint(hist)
-        hist = hist.astype(int)
+        hist = hist.astype(np.uint8)
         return hist
 
     def hist_equalization(self, gray_img, hist=None):
@@ -49,7 +45,7 @@ class ImageManipulator:
         cs = (len(hist) - 1) * cs / cs[-1]
         gray_img = np.interp(gray_img, bins, cs)
         gray_img = np.rint(gray_img)
-        gray_img = gray_img.astype(int)
+        gray_img = gray_img.astype(np.uint8)
         return gray_img
 
     def quantize_image(self, gray_img, thresholds):
@@ -68,54 +64,41 @@ class ImageManipulator:
             Q = Q + r[i] * ((x >= t[i]) & (x < t[i + 1]))
         B = Q[gray_img]
         gray_img = np.rint(B)
-        gray_img = gray_img.astype(int)
+        gray_img = gray_img.astype(np.uint8)
         return gray_img
 
     def linear_filter(self, gray_img, filter, scale):
+        filter = np.array(filter)
         f_w, f_h = filter.shape
-        i_w, i_h = gray_img.shape
-        o_w = i_w - f_w + 1
-        o_h = i_h - f_h + 1
-        new_img = np.zeros((o_w, o_h))
-        for i in range(o_w):
-            for j in range(o_h):
-                neighborhood = gray_img[i : i + f_w, j : j + f_h]
-                result = np.sum(filter * neighborhood)
-                scaled_result = result / scale
-                new_img[i, j] = scaled_result
-        new_img = np.rint(new_img)
-        new_img = new_img.astype(int)
-        return new_img
-
-    def median_filter(self, gray_img, weights):
-        f_w, f_h = weights.shape
         i_w, i_h = gray_img.shape
         o_w = i_w - f_w + 1
         o_h = i_h - f_h + 1
         new_img = np.zeros((o_w, o_h))
         for i, j in np.ndindex(new_img.shape):
             neighborhood = gray_img[i : i + f_w, j : j + f_h]
+            result = np.sum(filter * neighborhood)
+            scaled_result = result / scale
+            new_img[i, j] = scaled_result
+        new_img = np.rint(new_img)
+        new_img = new_img.astype(np.uint8)
+        return new_img
+
+    def median_filter(self, gray_img, weights):
+        weights = np.array(weights)
+        f_w, f_h = weights.shape
+        i_w, i_h = gray_img.shape
+        o_w = i_w - f_w + 1
+        o_h = i_h - f_h + 1
+        new_img = np.zeros((o_w, o_h))
+        for i, j in np.ndindex(new_img.shape):
             pixel_list = np.array([])
-            for k, l in np.ndindex(neighborhood.shape):
-                pixel_list = np.append(pixel_list, [neighborhood[k, l]] * weights[k, l])
+            for k, l in np.ndindex(f_w, f_h):
+                pixel_list = np.append(
+                    pixel_list,
+                    [gray_img[i : i + f_w, j : j + f_h][k, l]] * weights[k, l],
+                )
             result = np.median(pixel_list)
             new_img[i, j] = result
         new_img = np.rint(new_img)
-        new_img = new_img.astype(int)
+        new_img = new_img.astype(np.uint8)
         return new_img
-
-
-# if __name__ == "__main__":
-#     m = ImageManipulator()
-#     img = io.imread("./Cancerous cell smears/cyl01.BMP")
-#     img = m.to_grayscale(img)
-#     img = m.salt_pepper_noise(img, 0.01)
-#     img = m.gaussian_noise(img, 0, 10)
-#     hist = m.calc_histogram(img)
-#     img = m.hist_equalization(img, hist)
-#     img2 = m.quantize_image(img, [7, 10, 100, 200, 213])
-#     img = m.linear_filter(img, np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]]), 9)
-#     img = m.median_filter(img, np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]]))
-#     stat = m.mean_square_quantization_error(img, img2)
-#     plt.imshow(img)
-#     plt.show()

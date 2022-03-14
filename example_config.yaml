@@ -1,9 +1,0 @@
-input_image_path: ./Cancerous cell smears
-output_image_path: ./Output images
-output_statistics_path: ./Output statistics
-processing_steps:
-- arg_batch_name: batch1
-  function: gaussian_noise
-  mean: 0
-  return_batch_name: batch2
-  std: 10
