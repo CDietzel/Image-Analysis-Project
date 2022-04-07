@@ -67,7 +67,7 @@ class ImageManipulator:
         gray_img = gray_img.astype(np.uint8)
         return gray_img
 
-    def linear_filter(self, gray_img, filter, scale):
+    def linear_filter(self, gray_img, filter, scale, dtype=np.uint8):
         filter = np.array(filter)
         f_w, f_h = filter.shape
         i_w, i_h = gray_img.shape
@@ -80,7 +80,7 @@ class ImageManipulator:
             scaled_result = result / scale
             new_img[i, j] = scaled_result
         new_img = np.rint(new_img)
-        new_img = new_img.astype(np.uint8)
+        new_img = new_img.astype(dtype)
         return new_img
 
     def median_filter(self, gray_img, weights):
@@ -102,3 +102,48 @@ class ImageManipulator:
         new_img = np.rint(new_img)
         new_img = new_img.astype(np.uint8)
         return new_img
+
+    def edge_detect(self, gray_img, method="prewitt"):
+        if method == "prewitt":
+            filter_x = [[-1, 0, 1], [-1, 0, 1], [-1, 0, 1]]
+            filter_y = [[-1, -1, -1], [0, 0, 0], [1, 1, 1]]
+            scale = 6
+            dx = self.linear_filter(gray_img, filter_x, scale=scale, dtype=np.int16)
+            dy = self.linear_filter(gray_img, filter_y, scale=scale, dtype=np.int16)
+            mag = np.sqrt((dx * dx) + (dy * dy))
+            dir = np.arctan2(dy, dx)
+        elif method == "sobel":
+            filter_x = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]]
+            filter_y = [[-1, -2, -1], [0, 0, 0], [1, 2, 1]]
+            scale = 8
+            dx = self.linear_filter(gray_img, filter_x, scale=scale, dtype=np.int16)
+            dy = self.linear_filter(gray_img, filter_y, scale=scale, dtype=np.int16)
+            mag = np.sqrt((dx * dx) + (dy * dy))
+            dir = np.arctan2(dy, dx)
+        elif method == "compass":
+            filter_0 = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]]
+            filter_1 = [[-2, -1, 0], [-1, 0, 1], [0, 1, 2]]
+            filter_2 = [[-1, -2, -1], [0, 0, 0], [1, 2, 1]]
+            filter_3 = [[0, -1, -2], [1, 0, -1], [2, 1, 0]]
+            scale = 8
+            d0 = self.linear_filter(gray_img, filter_0, scale=scale, dtype=np.int16)
+            d1 = self.linear_filter(gray_img, filter_1, scale=scale, dtype=np.int16)
+            d2 = self.linear_filter(gray_img, filter_2, scale=scale, dtype=np.int16)
+            d3 = self.linear_filter(gray_img, filter_3, scale=scale, dtype=np.int16)
+            d4 = -d0
+            d5 = -d1
+            d6 = -d2
+            d7 = -d3
+            dstack = np.array([d0, d1, d2, d3, d4, d5, d6, d7])
+            mag = np.amax(dstack, axis=0)
+            dir = np.argmax(dstack, axis=0)  # NOTE: NEED TO FIX THIS SCALING
+        return mag, dir  # NOTE: Maybe add datatype conversion to int? IDK.
+
+
+if __name__ == "__main__":
+    q = ImageManipulator()
+    img = np.array(
+        [[7, 15, 21, 13], [31, 22, 25, 23], [13, 18, 10, 16], [25, 24, 29, 18]]
+    )
+    mag, dir = q.edge_detect(img, method="compass")
+    pass
