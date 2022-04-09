@@ -1,5 +1,8 @@
+from cgitb import grey
+from matplotlib.pyplot import close
 import numpy as np
 from numpy.random import default_rng
+import random
 
 
 class ImageManipulator:
@@ -138,6 +141,112 @@ class ImageManipulator:
             mag = np.amax(dstack, axis=0)
             dir = np.argmax(dstack, axis=0)  # NOTE: NEED TO FIX THIS SCALING
         return mag, dir  # NOTE: Maybe add datatype conversion to int? IDK.
+
+    def _translate(self, bin_img, trans_x, trans_y):
+        if trans_x >= 0:
+            bin_img = np.pad(bin_img, ((0, 0), (trans_x, 0)), mode="constant")[
+                :, :-trans_x
+            ]
+        else:
+            trans_x = -trans_x
+            bin_img = np.pad(bin_img, ((0, 0), (0, trans_x)), mode="constant")[
+                :, trans_x:
+            ]        
+        if trans_y >= 0:
+            bin_img = np.pad(bin_img, ((trans_y, 0), (0, 0)), mode="constant")[
+                :-trans_y, :
+            ]
+        else:
+            trans_y = -trans_y
+            bin_img = np.pad(bin_img, ((0, trans_y), (0, 0)), mode="constant")[
+                trans_y:, :
+            ]
+        return bin_img
+
+    def dilation(self, bin_img, strel, hot_x, hot_y):
+        dil_img = np.zeros(bin_img.shape)
+        for i, j in np.ndindex(strel.shape):
+            if strel[i, j] > 0:
+                trans_x = i - hot_x
+                trans_y = j - hot_y
+                trans_img = self._translate(bin_img, trans_x, trans_y)
+                dil_img = np.logical_and(trans_img>0, dil_img>0)
+        dil_img = dil_img.astype(np.int8)
+        return dil_img
+
+    def erosion(self, bin_img, strel, hot_x, hot_y):
+        x, y = strel.shape
+        pad_l = hot_x
+        pad_r = x - hot_x - 1
+        pad_u = hot_y
+        pad_d = y - hot_y - 1
+        ero_img = np.zeros(bin_img.shape)
+        pad_img = np.pad(bin_img, ((pad_l, pad_r), (pad_u, pad_d)), mode="constant")
+        for i, j in np.ndindex(bin_img.shape):
+            if np.logical_and(pad_img[i:i+x, j:j+y]>0, strel>0) == (strel>0):
+                ero_img[i, j] = 1
+        ero_img = ero_img.astype(np.int8)
+        return ero_img
+
+    def binary_thresh(self, gray_img, thresh):
+        thresh_img = gray_img<thresh
+        thresh_img = thresh_img.astype(np.int8)
+        return thresh_img
+
+    def k_means_clustering(self, gray_img, k, use_loc=False):
+        w, h = gray_img.shape
+        cluster_img = np.zeros(gray_img.shape)
+        clusters = []
+        for cluster in range(k):
+            p = []
+            p.append(random.uniform(0, 255))
+            if use_loc:
+                p.append(random.uniform(0, w-1))
+                p.append(random.uniform(0, h-1))
+            clusters.append(p)
+        
+        not_done = True
+        while not_done:
+            old_cluster_img = cluster_img
+            for i, j in np.ndindex(gray_img.shape):
+                close_dist = float('inf')
+                close_clust = 0
+                for i, cluster in enumerate(clusters):
+                    p = []
+                    p.append(gray_img[i, j])
+                    if use_loc:
+                        p.append(i)
+                        p.append(j)
+                    dist = np.linalg.norm(cluster - p)
+                    if dist < close_dist:
+                        close_dist = dist
+                        close_clust = i
+                cluster_img[i, j] = close_clust
+            clust_sum = np.zeros(np.array(clusters).shape)
+            clust_avg = np.zeros(np.array(clusters).shape)
+            clust_num = np.zeros(len(clusters))
+            for i, j in np.ndindex(gray_img.shape):
+                clust = cluster_img[i, j]
+                p = []
+                p.append(gray_img[i, j])
+                if use_loc:
+                    p.append(i)
+                    p.append(j)
+                npp = np.array(p)
+                clust_num[clust] += 1
+                clust_sum[clust] += npp
+            for i in range(clust_num):
+                clust_avg[i] = clust_sum[i]/clust_num[i]
+            clusters = clust_avg.tolist()
+            not_done = old_cluster_img != cluster_img
+        return cluster_img
+            
+
+
+
+
+
+
 
 
 if __name__ == "__main__":
