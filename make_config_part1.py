@@ -21,6 +21,13 @@ if __name__ == "__main__":
     # "filter": [[1, 1, 1], [1, 1, 1], [1, 1, 1]] # 2D array of weights for linear filter. Must all be integers
     # "scale": 9 # scaling factor for linear filter (divide each fliter sum by this value)
     # "weights": [[1, 2, 1], [2, 3, 2], [1, 2, 1]] # 2D array of weights for median filter. Must all be nonnegative integers
+    # "method": "prewitt", "sobel", or "compass" # edge detection operator to use.
+    # "strel": [[0, 1, 0], [1, 1, 1], [0, 1, 0]] # 2d array of "0" or "1". Structuring element to use for erosion or dilation
+    # "hot_x": 1 # x-index of the hot spot for the structuring element in erosion or dilation 
+    # "hot_y": 1 # y-index of the hot spot for the structuring element in erosion or dilation
+    # "bin_thresh": 128 # pixel intensity to use for binary thresholding.
+    # "k": 2 # Number of cluster centers to use for K-means clustering
+    # "use_loc": True # Choose whether to include pixel x-y location in k-means clustering calculations
 
     prefix_list = ["cyl", "inter", "let", "mod", "para", "super", "svar"]
     # This second prefix list will only process the first image from each batch, to save computation time

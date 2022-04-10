@@ -3,6 +3,7 @@ from matplotlib.pyplot import close
 import numpy as np
 from numpy.random import default_rng
 import random
+import copy
 
 
 class ImageManipulator:
@@ -78,8 +79,7 @@ class ImageManipulator:
         o_h = i_h - f_h + 1
         new_img = np.zeros((o_w, o_h))
         for i, j in np.ndindex(new_img.shape):
-            neighborhood = gray_img[i : i + f_w, j : j + f_h]
-            result = np.sum(filter * neighborhood)
+            result = np.sum(filter * gray_img[i : i + f_w, j : j + f_h])
             scaled_result = result / scale
             new_img[i, j] = scaled_result
         new_img = np.rint(new_img)
@@ -115,6 +115,7 @@ class ImageManipulator:
             dy = self.linear_filter(gray_img, filter_y, scale=scale, dtype=np.int16)
             mag = np.sqrt((dx * dx) + (dy * dy))
             dir = np.arctan2(dy, dx)
+            dir = np.mod(dir, np.pi * 2)  # normalize to 0-2pi scale
         elif method == "sobel":
             filter_x = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]]
             filter_y = [[-1, -2, -1], [0, 0, 0], [1, 2, 1]]
@@ -123,6 +124,7 @@ class ImageManipulator:
             dy = self.linear_filter(gray_img, filter_y, scale=scale, dtype=np.int16)
             mag = np.sqrt((dx * dx) + (dy * dy))
             dir = np.arctan2(dy, dx)
+            dir = np.mod(dir, np.pi * 2)  # normalize to 0-2pi scale
         elif method == "compass":
             filter_0 = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]]
             filter_1 = [[-2, -1, 0], [-1, 0, 1], [0, 1, 2]]
@@ -139,24 +141,30 @@ class ImageManipulator:
             d7 = -d3
             dstack = np.array([d0, d1, d2, d3, d4, d5, d6, d7])
             mag = np.amax(dstack, axis=0)
-            dir = np.argmax(dstack, axis=0)  # NOTE: NEED TO FIX THIS SCALING
-        return mag, dir  # NOTE: Maybe add datatype conversion to int? IDK.
+            dir = np.argmax(dstack, axis=0)
+            dir = (dir * np.pi) / 4  # normalize to 0-2pi scale
+        dir = (dir * 255) / (np.pi * 2)  # re-normalize to 0-255 scale for easy viewing
+        mag = np.rint(mag)
+        mag = mag.astype(np.uint8)
+        dir = np.rint(dir)
+        dir = dir.astype(np.uint8)
+        return mag, dir
 
     def _translate(self, bin_img, trans_x, trans_y):
-        if trans_x >= 0:
+        if trans_x > 0:
             bin_img = np.pad(bin_img, ((0, 0), (trans_x, 0)), mode="constant")[
                 :, :-trans_x
             ]
-        else:
+        elif trans_x < 0:
             trans_x = -trans_x
             bin_img = np.pad(bin_img, ((0, 0), (0, trans_x)), mode="constant")[
                 :, trans_x:
-            ]        
-        if trans_y >= 0:
+            ]
+        if trans_y > 0:
             bin_img = np.pad(bin_img, ((trans_y, 0), (0, 0)), mode="constant")[
                 :-trans_y, :
             ]
-        else:
+        elif trans_y < 0:
             trans_y = -trans_y
             bin_img = np.pad(bin_img, ((0, trans_y), (0, 0)), mode="constant")[
                 trans_y:, :
@@ -164,69 +172,76 @@ class ImageManipulator:
         return bin_img
 
     def dilation(self, bin_img, strel, hot_x, hot_y):
+        strel = np.array(strel)
         dil_img = np.zeros(bin_img.shape)
         for i, j in np.ndindex(strel.shape):
             if strel[i, j] > 0:
-                trans_x = i - hot_x
-                trans_y = j - hot_y
+                trans_x = j - hot_x
+                trans_y = i - hot_y
                 trans_img = self._translate(bin_img, trans_x, trans_y)
-                dil_img = np.logical_and(trans_img>0, dil_img>0)
-        dil_img = dil_img.astype(np.int8)
+                dil_img = np.logical_or(trans_img > 0, dil_img > 0)
+        dil_img = dil_img * 255
+        dil_img = dil_img.astype(np.uint8)
         return dil_img
 
     def erosion(self, bin_img, strel, hot_x, hot_y):
-        x, y = strel.shape
+        strel = np.array(strel)
+        y, x = strel.shape
         pad_l = hot_x
         pad_r = x - hot_x - 1
         pad_u = hot_y
         pad_d = y - hot_y - 1
         ero_img = np.zeros(bin_img.shape)
-        pad_img = np.pad(bin_img, ((pad_l, pad_r), (pad_u, pad_d)), mode="constant")
+        pad_img = np.pad(bin_img, ((pad_u, pad_d), (pad_l, pad_r)), mode="constant")
         for i, j in np.ndindex(bin_img.shape):
-            if np.logical_and(pad_img[i:i+x, j:j+y]>0, strel>0) == (strel>0):
-                ero_img[i, j] = 1
-        ero_img = ero_img.astype(np.int8)
+            logical_pad = pad_img[i : i + y, j : j + x] > 0
+            logical_strel = strel > 0
+            and_pad_strel = np.logical_and(logical_pad, logical_strel)
+            if np.array_equal(and_pad_strel, logical_strel):
+                ero_img[i, j] = 255
+        ero_img = ero_img.astype(np.uint8)
         return ero_img
 
-    def binary_thresh(self, gray_img, thresh):
-        thresh_img = gray_img<thresh
-        thresh_img = thresh_img.astype(np.int8)
+    def binary_thresh(self, gray_img, bin_thresh):
+        thresh_img = gray_img < bin_thresh
+        thresh_img = thresh_img * 255
+        thresh_img = thresh_img.astype(np.uint8)
         return thresh_img
 
-    def k_means_clustering(self, gray_img, k, use_loc=False):
-        w, h = gray_img.shape
+    def k_means_clustering(self, gray_img, k, use_loc=True):
+        h, w = gray_img.shape
         cluster_img = np.zeros(gray_img.shape)
         clusters = []
         for cluster in range(k):
             p = []
             p.append(random.uniform(0, 255))
             if use_loc:
-                p.append(random.uniform(0, w-1))
-                p.append(random.uniform(0, h-1))
+                p.append(random.uniform(0, h - 1))
+                p.append(random.uniform(0, w - 1))
             clusters.append(p)
-        
+
         not_done = True
         while not_done:
-            old_cluster_img = cluster_img
+            old_cluster_img = copy.deepcopy(cluster_img)
             for i, j in np.ndindex(gray_img.shape):
-                close_dist = float('inf')
+                close_dist = float("inf")
                 close_clust = 0
-                for i, cluster in enumerate(clusters):
+                for num, cluster in enumerate(clusters):
                     p = []
                     p.append(gray_img[i, j])
                     if use_loc:
                         p.append(i)
                         p.append(j)
-                    dist = np.linalg.norm(cluster - p)
+                    dist = np.linalg.norm(np.array(cluster) - np.array(p))
                     if dist < close_dist:
                         close_dist = dist
-                        close_clust = i
+                        close_clust = num
                 cluster_img[i, j] = close_clust
             clust_sum = np.zeros(np.array(clusters).shape)
             clust_avg = np.zeros(np.array(clusters).shape)
             clust_num = np.zeros(len(clusters))
             for i, j in np.ndindex(gray_img.shape):
-                clust = cluster_img[i, j]
+                clust = int(cluster_img[i, j])
                 p = []
                 p.append(gray_img[i, j])
                 if use_loc:
@@ -235,24 +250,23 @@ class ImageManipulator:
                 npp = np.array(p)
                 clust_num[clust] += 1
                 clust_sum[clust] += npp
-            for i in range(clust_num):
-                clust_avg[i] = clust_sum[i]/clust_num[i]
+            for i in range(len(clust_num)):
+                if clust_num[i] != 0:
+                    clust_avg[i] = clust_sum[i] / clust_num[i]
+                else:
+                    clust_avg[i] = np.array(clusters[i])
             clusters = clust_avg.tolist()
-            not_done = old_cluster_img != cluster_img
+            not_done = not np.array_equal(old_cluster_img, cluster_img)
+        cluster_img = cluster_img * 255
+        cluster_img = cluster_img / (k-1)
+        cluster_img = cluster_img.astype(np.uint8)
         return cluster_img
-            
 
 
-
-
-
-
-
-
-if __name__ == "__main__":
-    q = ImageManipulator()
-    img = np.array(
-        [[7, 15, 21, 13], [31, 22, 25, 23], [13, 18, 10, 16], [25, 24, 29, 18]]
-    )
-    mag, dir = q.edge_detect(img, method="compass")
-    pass
+# if __name__ == "__main__":
+#     q = ImageManipulator()
+#     img = np.array(
+#         [[7, 15, 21, 13], [31, 22, 25, 23], [13, 18, 10, 16], [25, 24, 29, 18]]
+#     )
+#     mag, dir = q.edge_detect(img, method="compass")
+#     pass

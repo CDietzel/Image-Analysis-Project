@@ -127,6 +127,7 @@ class BatchProcessor:
                 }
                 stats_data = [function_name, stats]
                 self._statistics.append(stats_data)
+
             elif function_name == "calc_histogram":
                 batch_name = step["arg_batch_name"]
                 hist_path = self._config["histogram_path"]
@@ -240,6 +241,126 @@ class BatchProcessor:
                 for image in image_list:
                     image_start_time = time.time()
                     new_image_list.append(self._m.median_filter(image, weights))
+                    image_elapsed = time.time() - image_start_time
+                    runtime_list.append(image_elapsed)
+                self._image_sets[return_name] = new_image_list
+                batch_elapsed = time.time() - batch_start_time
+                avg_runtime = statistics.mean(runtime_list)
+                stats = {
+                    "entire_batch_runtime": batch_elapsed,
+                    "avg_image_runtime": avg_runtime,
+                }
+                stats_data = [function_name, stats]
+                self._statistics.append(stats_data)
+
+            elif function_name == "edge_detect":
+                batch_name = step["arg_batch_name"]
+                return_mag_name = step["return_magnitude_batch_name"]
+                return_dir_name = step["return_direction_batch_name"]
+                method = step["method"]
+                image_list = self._image_sets[batch_name]
+                new_mag_image_list = []
+                new_dir_image_list = []
+                runtime_list = []
+                for image in image_list:
+                    image_start_time = time.time()
+                    mag, dir = self._m.edge_detect(image, method)
+                    new_mag_image_list.append(mag)
+                    new_dir_image_list.append(dir)
+                    image_elapsed = time.time() - image_start_time
+                    runtime_list.append(image_elapsed)
+                self._image_sets[return_mag_name] = new_mag_image_list
+                self._image_sets[return_dir_name] = new_dir_image_list
+                batch_elapsed = time.time() - batch_start_time
+                avg_runtime = statistics.mean(runtime_list)
+                stats = {
+                    "entire_batch_runtime": batch_elapsed,
+                    "avg_image_runtime": avg_runtime,
+                }
+                stats_data = [function_name, stats]
+                self._statistics.append(stats_data)
+
+            elif function_name == "dilation":
+                batch_name = step["arg_batch_name"]
+                return_name = step["return_batch_name"]
+                strel = step["strel"]
+                hot_x = step["hot_x"]
+                hot_y = step["hot_y"]
+                image_list = self._image_sets[batch_name]
+                new_image_list = []
+                runtime_list = []
+                for image in image_list:
+                    image_start_time = time.time()
+                    new_image_list.append(self._m.dilation(image, strel, hot_x, hot_y))
+                    image_elapsed = time.time() - image_start_time
+                    runtime_list.append(image_elapsed)
+                self._image_sets[return_name] = new_image_list
+                batch_elapsed = time.time() - batch_start_time
+                avg_runtime = statistics.mean(runtime_list)
+                stats = {
+                    "entire_batch_runtime": batch_elapsed,
+                    "avg_image_runtime": avg_runtime,
+                }
+                stats_data = [function_name, stats]
+                self._statistics.append(stats_data)
+
+            elif function_name == "erosion":
+                batch_name = step["arg_batch_name"]
+                return_name = step["return_batch_name"]
+                strel = step["strel"]
+                hot_x = step["hot_x"]
+                hot_y = step["hot_y"]
+                image_list = self._image_sets[batch_name]
+                new_image_list = []
+                runtime_list = []
+                for image in image_list:
+                    image_start_time = time.time()
+                    new_image_list.append(self._m.erosion(image, strel, hot_x, hot_y))
+                    image_elapsed = time.time() - image_start_time
+                    runtime_list.append(image_elapsed)
+                self._image_sets[return_name] = new_image_list
+                batch_elapsed = time.time() - batch_start_time
+                avg_runtime = statistics.mean(runtime_list)
+                stats = {
+                    "entire_batch_runtime": batch_elapsed,
+                    "avg_image_runtime": avg_runtime,
+                }
+                stats_data = [function_name, stats]
+                self._statistics.append(stats_data)
+
+            elif function_name == "binary_thresh":
+                batch_name = step["arg_batch_name"]
+                return_name = step["return_batch_name"]
+                bin_thresh = step["bin_thresh"]
+                image_list = self._image_sets[batch_name]
+                new_image_list = []
+                runtime_list = []
+                for image in image_list:
+                    image_start_time = time.time()
+                    new_image_list.append(self._m.binary_thresh(image, bin_thresh))
+                    image_elapsed = time.time() - image_start_time
+                    runtime_list.append(image_elapsed)
+                self._image_sets[return_name] = new_image_list
+                batch_elapsed = time.time() - batch_start_time
+                avg_runtime = statistics.mean(runtime_list)
+                stats = {
+                    "entire_batch_runtime": batch_elapsed,
+                    "avg_image_runtime": avg_runtime,
+                }
+                stats_data = [function_name, stats]
+                self._statistics.append(stats_data)
+
+            elif function_name == "k_means_clustering":
+                batch_name = step["arg_batch_name"]
+                return_name = step["return_batch_name"]
+                k = step["k"]
+                use_loc = step["use_loc"]
+                image_list = self._image_sets[batch_name]
+                new_image_list = []
+                runtime_list = []
+                for image in image_list:
+                    image_start_time = time.time()
+                    new_image_list.append(self._m.k_means_clustering(image, k, use_loc))
                     image_elapsed = time.time() - image_start_time
                     runtime_list.append(image_elapsed)
                 self._image_sets[return_name] = new_image_list

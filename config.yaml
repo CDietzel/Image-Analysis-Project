@@ -3,115 +3,38 @@ input_image_path: ./Cancerous cell smears
 output_image_path: ./Output images
 output_statistics_path: ./Output statistics
 processing_steps:
-- {channel: null, file_prefix: cyl, function: load_image_set, return_batch_name: batch1}
-- {arg_batch_name: batch1, function: salt_pepper_noise, ratio: 0.1, return_batch_name: batch2}
-- {arg_batch_name: batch1, function: gaussian_noise, mean: 0, return_batch_name: batch3,
-  std: 20}
-- {arg_batch_name: batch1, file_prefix: cyl_histogram, function: calc_histogram}
-- {arg_batch_name: batch1, function: hist_equalization, return_batch_name: batch4}
-- arg_batch_name: batch1
-  function: quantize_image
-  return_batch_name: batch5
-  thresholds: [0, 50, 100, 150, 200, 256]
-- {arg_batch_name: batch1, file_prefix: cyl_greyscale, function: save_image_set}
-- {arg_batch_name: batch2, file_prefix: cyl_salt_pepper, function: save_image_set}
-- {arg_batch_name: batch3, file_prefix: cyl_gaussian, function: save_image_set}
-- {arg_batch_name: batch4, file_prefix: cyl_hist_eq, function: save_image_set}
-- {arg_batch_name: batch5, file_prefix: cyl_quantized, function: save_image_set}
-- {file_prefix: cyl_stats, function: save_statistics}
-- {channel: null, file_prefix: inter, function: load_image_set, return_batch_name: batch1}
-- {arg_batch_name: batch1, function: salt_pepper_noise, ratio: 0.1, return_batch_name: batch2}
-- {arg_batch_name: batch1, function: gaussian_noise, mean: 0, return_batch_name: batch3,
-  std: 20}
-- {arg_batch_name: batch1, file_prefix: inter_histogram, function: calc_histogram}
-- {arg_batch_name: batch1, function: hist_equalization, return_batch_name: batch4}
-- arg_batch_name: batch1
-  function: quantize_image
-  return_batch_name: batch5
-  thresholds: [0, 50, 100, 150, 200, 256]
-- {arg_batch_name: batch1, file_prefix: inter_greyscale, function: save_image_set}
-- {arg_batch_name: batch2, file_prefix: inter_salt_pepper, function: save_image_set}
-- {arg_batch_name: batch3, file_prefix: inter_gaussian, function: save_image_set}
-- {arg_batch_name: batch4, file_prefix: inter_hist_eq, function: save_image_set}
-- {arg_batch_name: batch5, file_prefix: inter_quantized, function: save_image_set}
-- {file_prefix: inter_stats, function: save_statistics}
-- {channel: null, file_prefix: let, function: load_image_set, return_batch_name: batch1}
-- {arg_batch_name: batch1, function: salt_pepper_noise, ratio: 0.1, return_batch_name: batch2}
-- {arg_batch_name: batch1, function: gaussian_noise, mean: 0, return_batch_name: batch3,
-  std: 20}
-- {arg_batch_name: batch1, file_prefix: let_histogram, function: calc_histogram}
-- {arg_batch_name: batch1, function: hist_equalization, return_batch_name: batch4}
-- arg_batch_name: batch1
-  function: quantize_image
-  return_batch_name: batch5
-  thresholds: [0, 50, 100, 150, 200, 256]
-- {arg_batch_name: batch1, file_prefix: let_greyscale, function: save_image_set}
-- {arg_batch_name: batch2, file_prefix: let_salt_pepper, function: save_image_set}
-- {arg_batch_name: batch3, file_prefix: let_gaussian, function: save_image_set}
-- {arg_batch_name: batch4, file_prefix: let_hist_eq, function: save_image_set}
-- {arg_batch_name: batch5, file_prefix: let_quantized, function: save_image_set}
-- {file_prefix: let_stats, function: save_statistics}
-- {channel: null, file_prefix: mod, function: load_image_set, return_batch_name: batch1}
-- {arg_batch_name: batch1, function: salt_pepper_noise, ratio: 0.1, return_batch_name: batch2}
-- {arg_batch_name: batch1, function: gaussian_noise, mean: 0, return_batch_name: batch3,
-  std: 20}
-- {arg_batch_name: batch1, file_prefix: mod_histogram, function: calc_histogram}
-- {arg_batch_name: batch1, function: hist_equalization, return_batch_name: batch4}
-- arg_batch_name: batch1
-  function: quantize_image
-  return_batch_name: batch5
-  thresholds: [0, 50, 100, 150, 200, 256]
-- {arg_batch_name: batch1, file_prefix: mod_greyscale, function: save_image_set}
-- {arg_batch_name: batch2, file_prefix: mod_salt_pepper, function: save_image_set}
-- {arg_batch_name: batch3, file_prefix: mod_gaussian, function: save_image_set}
-- {arg_batch_name: batch4, file_prefix: mod_hist_eq, function: save_image_set}
-- {arg_batch_name: batch5, file_prefix: mod_quantized, function: save_image_set}
-- {file_prefix: mod_stats, function: save_statistics}
-- {channel: null, file_prefix: para, function: load_image_set, return_batch_name: batch1}
-- {arg_batch_name: batch1, function: salt_pepper_noise, ratio: 0.1, return_batch_name: batch2}
-- {arg_batch_name: batch1, function: gaussian_noise, mean: 0, return_batch_name: batch3,
-  std: 20}
-- {arg_batch_name: batch1, file_prefix: para_histogram, function: calc_histogram}
-- {arg_batch_name: batch1, function: hist_equalization, return_batch_name: batch4}
-- arg_batch_name: batch1
-  function: quantize_image
-  return_batch_name: batch5
-  thresholds: [0, 50, 100, 150, 200, 256]
-- {arg_batch_name: batch1, file_prefix: para_greyscale, function: save_image_set}
-- {arg_batch_name: batch2, file_prefix: para_salt_pepper, function: save_image_set}
-- {arg_batch_name: batch3, file_prefix: para_gaussian, function: save_image_set}
-- {arg_batch_name: batch4, file_prefix: para_hist_eq, function: save_image_set}
-- {arg_batch_name: batch5, file_prefix: para_quantized, function: save_image_set}
-- {file_prefix: para_stats, function: save_statistics}
-- {channel: null, file_prefix: super, function: load_image_set, return_batch_name: batch1}
-- {arg_batch_name: batch1, function: salt_pepper_noise, ratio: 0.1, return_batch_name: batch2}
-- {arg_batch_name: batch1, function: gaussian_noise, mean: 0, return_batch_name: batch3,
-  std: 20}
-- {arg_batch_name: batch1, file_prefix: super_histogram, function: calc_histogram}
-- {arg_batch_name: batch1, function: hist_equalization, return_batch_name: batch4}
-- arg_batch_name: batch1
-  function: quantize_image
-  return_batch_name: batch5
-  thresholds: [0, 50, 100, 150, 200, 256]
-- {arg_batch_name: batch1, file_prefix: super_greyscale, function: save_image_set}
-- {arg_batch_name: batch2, file_prefix: super_salt_pepper, function: save_image_set}
-- {arg_batch_name: batch3, file_prefix: super_gaussian, function: save_image_set}
-- {arg_batch_name: batch4, file_prefix: super_hist_eq, function: save_image_set}
-- {arg_batch_name: batch5, file_prefix: super_quantized, function: save_image_set}
-- {file_prefix: super_stats, function: save_statistics}
-- {channel: null, file_prefix: svar, function: load_image_set, return_batch_name: batch1}
-- {arg_batch_name: batch1, function: salt_pepper_noise, ratio: 0.1, return_batch_name: batch2}
-- {arg_batch_name: batch1, function: gaussian_noise, mean: 0, return_batch_name: batch3,
-  std: 20}
-- {arg_batch_name: batch1, file_prefix: svar_histogram, function: calc_histogram}
-- {arg_batch_name: batch1, function: hist_equalization, return_batch_name: batch4}
-- arg_batch_name: batch1
-  function: quantize_image
-  return_batch_name: batch5
-  thresholds: [0, 50, 100, 150, 200, 256]
-- {arg_batch_name: batch1, file_prefix: svar_greyscale, function: save_image_set}
-- {arg_batch_name: batch2, file_prefix: svar_salt_pepper, function: save_image_set}
-- {arg_batch_name: batch3, file_prefix: svar_gaussian, function: save_image_set}
-- {arg_batch_name: batch4, file_prefix: svar_hist_eq, function: save_image_set}
-- {arg_batch_name: batch5, file_prefix: svar_quantized, function: save_image_set}
-- {file_prefix: svar_stats, function: save_statistics}
+- {channel: null, file_prefix: cyl01, function: load_image_set, return_batch_name: batch1}
+- {arg_batch_name: batch1, function: k_means_clustering, k: 3, return_batch_name: batch12,
+  use_loc: true}
+- {arg_batch_name: batch1, file_prefix: cyl01_greyscale, function: save_image_set}
+- {arg_batch_name: batch12, file_prefix: cyl01_k_means_with_loc, function: save_image_set}
+- {channel: null, file_prefix: inter01, function: load_image_set, return_batch_name: batch1}
+- {arg_batch_name: batch1, function: k_means_clustering, k: 3, return_batch_name: batch12,
+  use_loc: true}
+- {arg_batch_name: batch1, file_prefix: inter01_greyscale, function: save_image_set}
+- {arg_batch_name: batch12, file_prefix: inter01_k_means_with_loc, function: save_image_set}
+- {channel: null, file_prefix: let01, function: load_image_set, return_batch_name: batch1}
+- {arg_batch_name: batch1, function: k_means_clustering, k: 3, return_batch_name: batch12,
+  use_loc: true}
+- {arg_batch_name: batch1, file_prefix: let01_greyscale, function: save_image_set}
+- {arg_batch_name: batch12, file_prefix: let01_k_means_with_loc, function: save_image_set}
+- {channel: null, file_prefix: mod01, function: load_image_set, return_batch_name: batch1}
+- {arg_batch_name: batch1, function: k_means_clustering, k: 3, return_batch_name: batch12,
+  use_loc: true}
+- {arg_batch_name: batch1, file_prefix: mod01_greyscale, function: save_image_set}
+- {arg_batch_name: batch12, file_prefix: mod01_k_means_with_loc, function: save_image_set}
+- {channel: null, file_prefix: para01, function: load_image_set, return_batch_name: batch1}
+- {arg_batch_name: batch1, function: k_means_clustering, k: 3, return_batch_name: batch12,
+  use_loc: true}
+- {arg_batch_name: batch1, file_prefix: para01_greyscale, function: save_image_set}
+- {arg_batch_name: batch12, file_prefix: para01_k_means_with_loc, function: save_image_set}
+- {channel: null, file_prefix: super01, function: load_image_set, return_batch_name: batch1}
+- {arg_batch_name: batch1, function: k_means_clustering, k: 3, return_batch_name: batch12,
+  use_loc: true}
+- {arg_batch_name: batch1, file_prefix: super01_greyscale, function: save_image_set}
+- {arg_batch_name: batch12, file_prefix: super01_k_means_with_loc, function: save_image_set}
+- {channel: null, file_prefix: svar01, function: load_image_set, return_batch_name: batch1}
+- {arg_batch_name: batch1, function: k_means_clustering, k: 3, return_batch_name: batch12,
+  use_loc: true}
+- {arg_batch_name: batch1, file_prefix: svar01_greyscale, function: save_image_set}
+- {arg_batch_name: batch12, file_prefix: svar01_k_means_with_loc, function: save_image_set}
