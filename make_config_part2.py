@@ -32,6 +32,7 @@ if __name__ == "__main__":
     # prefix_list = ["cyl", "inter", "let", "mod", "para", "super", "svar"]
     # This second prefix list will only process the first image from each batch, to save computation time
     prefix_list = ["cyl01", "inter01", "let01", "mod01", "para01", "super01", "svar01"]
+    # prefix_list = ["cyl01"]
 
     for prefix in prefix_list:
 
@@ -42,68 +43,68 @@ if __name__ == "__main__":
         step["channel"] = None
         processing_steps.append(step)
 
-        # step = {}
-        # step["function"] = "edge_detect"
-        # step["arg_batch_name"] = "batch1"
-        # step["return_magnitude_batch_name"] = "batch2"
-        # step["return_direction_batch_name"] = "batch3"
-        # step["method"] = "prewitt"
-        # processing_steps.append(step)
+        step = {}
+        step["function"] = "edge_detect"
+        step["arg_batch_name"] = "batch1"
+        step["return_magnitude_batch_name"] = "batch2"
+        step["return_direction_batch_name"] = "batch3"
+        step["method"] = "prewitt"
+        processing_steps.append(step)
 
-        # step = {}
-        # step["function"] = "edge_detect"
-        # step["arg_batch_name"] = "batch1"
-        # step["return_magnitude_batch_name"] = "batch4"
-        # step["return_direction_batch_name"] = "batch5"
-        # step["method"] = "sobel"
-        # processing_steps.append(step)
+        step = {}
+        step["function"] = "edge_detect"
+        step["arg_batch_name"] = "batch1"
+        step["return_magnitude_batch_name"] = "batch4"
+        step["return_direction_batch_name"] = "batch5"
+        step["method"] = "sobel"
+        processing_steps.append(step)
 
-        # step = {}
-        # step["function"] = "edge_detect"
-        # step["arg_batch_name"] = "batch1"
-        # step["return_magnitude_batch_name"] = "batch6"
-        # step["return_direction_batch_name"] = "batch7"
-        # step["method"] = "compass"
-        # processing_steps.append(step)
+        step = {}
+        step["function"] = "edge_detect"
+        step["arg_batch_name"] = "batch1"
+        step["return_magnitude_batch_name"] = "batch6"
+        step["return_direction_batch_name"] = "batch7"
+        step["method"] = "compass"
+        processing_steps.append(step)
 
-        # step = {}
-        # step["function"] = "binary_thresh"
-        # step["arg_batch_name"] = "batch1"
-        # step["return_batch_name"] = "batch8"
-        # step["bin_thresh"] = 128
-        # processing_steps.append(step)
+        step = {}
+        step["function"] = "binary_thresh"
+        step["arg_batch_name"] = "batch1"
+        step["return_batch_name"] = "batch8"
+        step["bin_thresh"] = 128
+        processing_steps.append(step)
 
-        # step = {}
-        # step["function"] = "dilation"
-        # step["arg_batch_name"] = "batch8"
-        # step["return_batch_name"] = "batch9"
-        # step["strel"] = [[0, 1, 0], [1, 1, 1], [0, 1, 0]]
-        # step["hot_x"] = 1
-        # step["hot_y"] = 1
-        # processing_steps.append(step)
+        step = {}
+        step["function"] = "dilation"
+        step["arg_batch_name"] = "batch8"
+        step["return_batch_name"] = "batch9"
+        step["strel"] = [[0, 1, 0], [1, 1, 1], [0, 1, 0]]
+        step["hot_x"] = 1
+        step["hot_y"] = 1
+        processing_steps.append(step)
 
-        # step = {}
-        # step["function"] = "erosion"
-        # step["arg_batch_name"] = "batch8"
-        # step["return_batch_name"] = "batch10"
-        # step["strel"] = [[0, 1, 0], [1, 1, 1], [0, 1, 0]]
-        # step["hot_x"] = 1
-        # step["hot_y"] = 1
-        # processing_steps.append(step)
+        step = {}
+        step["function"] = "erosion"
+        step["arg_batch_name"] = "batch8"
+        step["return_batch_name"] = "batch10"
+        step["strel"] = [[0, 1, 0], [1, 1, 1], [0, 1, 0]]
+        step["hot_x"] = 1
+        step["hot_y"] = 1
+        processing_steps.append(step)
 
-        # step = {}
-        # step["function"] = "k_means_clustering"
-        # step["arg_batch_name"] = "batch1"
-        # step["return_batch_name"] = "batch11"
-        # step["k"] = 3
-        # step["use_loc"] = False
-        # processing_steps.append(step)
+        step = {}
+        step["function"] = "k_means_clustering"
+        step["arg_batch_name"] = "batch1"
+        step["return_batch_name"] = "batch11"
+        step["k"] = 5
+        step["use_loc"] = False
+        processing_steps.append(step)
 
         step = {}
         step["function"] = "k_means_clustering"
         step["arg_batch_name"] = "batch1"
         step["return_batch_name"] = "batch12"
-        step["k"] = 3
+        step["k"] = 5
         step["use_loc"] = True
         processing_steps.append(step)
 
@@ -113,65 +114,65 @@ if __name__ == "__main__":
         step["file_prefix"] = prefix + "_greyscale"
         processing_steps.append(step)
 
-        # step = {}
-        # step["function"] = "save_image_set"
-        # step["arg_batch_name"] = "batch2"
-        # step["file_prefix"] = prefix + "_prewitt_edge_mag"
-        # processing_steps.append(step)
+        step = {}
+        step["function"] = "save_image_set"
+        step["arg_batch_name"] = "batch2"
+        step["file_prefix"] = prefix + "_prewitt_edge_mag"
+        processing_steps.append(step)
 
-        # step = {}
-        # step["function"] = "save_image_set"
-        # step["arg_batch_name"] = "batch3"
-        # step["file_prefix"] = prefix + "_prewitt_edge_dir"
-        # processing_steps.append(step)
+        step = {}
+        step["function"] = "save_image_set"
+        step["arg_batch_name"] = "batch3"
+        step["file_prefix"] = prefix + "_prewitt_edge_dir"
+        processing_steps.append(step)
 
-        # step = {}
-        # step["function"] = "save_image_set"
-        # step["arg_batch_name"] = "batch4"
-        # step["file_prefix"] = prefix + "_sobel_edge_mag"
-        # processing_steps.append(step)
+        step = {}
+        step["function"] = "save_image_set"
+        step["arg_batch_name"] = "batch4"
+        step["file_prefix"] = prefix + "_sobel_edge_mag"
+        processing_steps.append(step)
 
-        # step = {}
-        # step["function"] = "save_image_set"
-        # step["arg_batch_name"] = "batch5"
-        # step["file_prefix"] = prefix + "_sobel_edge_dir"
-        # processing_steps.append(step)
+        step = {}
+        step["function"] = "save_image_set"
+        step["arg_batch_name"] = "batch5"
+        step["file_prefix"] = prefix + "_sobel_edge_dir"
+        processing_steps.append(step)
 
-        # step = {}
-        # step["function"] = "save_image_set"
-        # step["arg_batch_name"] = "batch6"
-        # step["file_prefix"] = prefix + "_compass_edge_mag"
-        # processing_steps.append(step)
+        step = {}
+        step["function"] = "save_image_set"
+        step["arg_batch_name"] = "batch6"
+        step["file_prefix"] = prefix + "_compass_edge_mag"
+        processing_steps.append(step)
 
-        # step = {}
-        # step["function"] = "save_image_set"
-        # step["arg_batch_name"] = "batch7"
-        # step["file_prefix"] = prefix + "_compass_edge_dir"
-        # processing_steps.append(step)
+        step = {}
+        step["function"] = "save_image_set"
+        step["arg_batch_name"] = "batch7"
+        step["file_prefix"] = prefix + "_compass_edge_dir"
+        processing_steps.append(step)
 
-        # step = {}
-        # step["function"] = "save_image_set"
-        # step["arg_batch_name"] = "batch8"
-        # step["file_prefix"] = prefix + "_binary_thresh"
-        # processing_steps.append(step)
+        step = {}
+        step["function"] = "save_image_set"
+        step["arg_batch_name"] = "batch8"
+        step["file_prefix"] = prefix + "_binary_thresh"
+        processing_steps.append(step)
 
-        # step = {}
-        # step["function"] = "save_image_set"
-        # step["arg_batch_name"] = "batch9"
-        # step["file_prefix"] = prefix + "_dilation"
-        # processing_steps.append(step)
+        step = {}
+        step["function"] = "save_image_set"
+        step["arg_batch_name"] = "batch9"
+        step["file_prefix"] = prefix + "_dilation"
+        processing_steps.append(step)
 
-        # step = {}
-        # step["function"] = "save_image_set"
-        # step["arg_batch_name"] = "batch10"
-        # step["file_prefix"] = prefix + "_erosion"
-        # processing_steps.append(step)
+        step = {}
+        step["function"] = "save_image_set"
+        step["arg_batch_name"] = "batch10"
+        step["file_prefix"] = prefix + "_erosion"
+        processing_steps.append(step)
 
-        # step = {}
-        # step["function"] = "save_image_set"
-        # step["arg_batch_name"] = "batch11"
-        # step["file_prefix"] = prefix + "_k_means_no_loc"
-        # processing_steps.append(step)
+        step = {}
+        step["function"] = "save_image_set"
+        step["arg_batch_name"] = "batch11"
+        step["file_prefix"] = prefix + "_k_means_no_loc"
+        processing_steps.append(step)
 
         step = {}
         step["function"] = "save_image_set"

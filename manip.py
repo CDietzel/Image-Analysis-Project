@@ -1,5 +1,5 @@
 from cgitb import grey
-from matplotlib.pyplot import close
+from matplotlib.pyplot import axis, close
 import numpy as np
 from numpy.random import default_rng
 import random
@@ -144,6 +144,7 @@ class ImageManipulator:
             dir = np.argmax(dstack, axis=0)
             dir = (dir * np.pi) / 4  # normalize to 0-2pi scale
         dir = (dir * 255) / (np.pi * 2)  # re-normalize to 0-255 scale for easy viewing
+        mag = mag * 10 # scaling factor so that the magnitude image is actually visible
         mag = np.rint(mag)
         mag = mag.astype(np.uint8)
         dir = np.rint(dir)
@@ -211,54 +212,54 @@ class ImageManipulator:
     def k_means_clustering(self, gray_img, k, use_loc=True):
         h, w = gray_img.shape
         cluster_img = np.zeros(gray_img.shape)
+        # clusters = []
+        # for cluster in range(k):
+        #     p = []
+        #     p.append(random.uniform(0, 255))
+        #     if use_loc:
+        #         p.append(random.uniform(0, h - 1))
+        #         p.append(random.uniform(0, w - 1))
+        #     clusters.append(p)
+        # clusters = np.array(clusters)
         clusters = []
-        for cluster in range(k):
-            p = []
-            p.append(random.uniform(0, 255))
-            if use_loc:
-                p.append(random.uniform(0, h - 1))
-                p.append(random.uniform(0, w - 1))
-            clusters.append(p)
+        metric_arr = np.expand_dims(gray_img, axis=-1)
+        if use_loc:
+            pos_grid = np.transpose(np.meshgrid(np.arange(h), np.arange(w)))
+            metric_arr = np.dstack((metric_arr, pos_grid))
+        metric_arr = metric_arr.reshape(h * w, -1)
+        metric_arr = np.unique(metric_arr, axis=0)
+        clusters = self._rng.choice(metric_arr, k, replace=False, axis=0)
 
         not_done = True
         while not_done:
             old_cluster_img = copy.deepcopy(cluster_img)
-            for i, j in np.ndindex(gray_img.shape):
-                close_dist = float("inf")
-                close_clust = 0
-                for num, cluster in enumerate(clusters):
-                    p = []
-                    p.append(gray_img[i, j])
-                    if use_loc:
-                        p.append(i)
-                        p.append(j)
-                    dist = np.linalg.norm(np.array(cluster) - np.array(p))
-                    if dist < close_dist:
-                        close_dist = dist
-                        close_clust = num
-                cluster_img[i, j] = close_clust
-            clust_sum = np.zeros(np.array(clusters).shape)
-            clust_avg = np.zeros(np.array(clusters).shape)
-            clust_num = np.zeros(len(clusters))
-            for i, j in np.ndindex(gray_img.shape):
-                clust = int(cluster_img[i, j])
-                p = []
-                p.append(gray_img[i, j])
+            metric_arr = np.expand_dims(gray_img, axis=-1).astype(int)
+            if use_loc:
+                pos_grid = np.transpose(np.meshgrid(np.arange(h), np.arange(w)))
+                metric_arr = np.dstack((metric_arr, pos_grid))
+            dist = []
+            for cluster in clusters:
+                diff = metric_arr - cluster
                 if use_loc:
-                    p.append(i)
-                    p.append(j)
-                npp = np.array(p)
-                clust_num[clust] += 1
-                clust_sum[clust] += npp
-            for i in range(len(clust_num)):
-                if clust_num[i] != 0:
-                    clust_avg[i] = clust_sum[i] / clust_num[i]
-                else:
-                    clust_avg[i] = np.array(clusters[i])
-            clusters = clust_avg.tolist()
+                    diff = diff.astype(float)
+                    diff[:, :, 1:3] *= 0.05 # scaling factor so that the pixel position
+                    # error doesn't overwhelm the pixel value error
+                cluster_diff = np.linalg.norm(diff, axis=-1)
+                dist.append(cluster_diff)
+            dist = np.array(dist)
+            cluster_img = np.argmin(dist, axis=0)
+            cluster_avg = []
+            for num in range(len(clusters)):
+                mask = cluster_img == num
+                masked_metric = metric_arr[mask]
+                mean_metric = masked_metric.mean(axis=0)
+                cluster_avg.append(mean_metric)
+            cluster_avg = np.array(cluster_avg)
+            cluster_avg[np.isnan(cluster_avg)] = clusters[np.isnan(cluster_avg)]
+            clusters = cluster_avg
             not_done = not np.array_equal(old_cluster_img, cluster_img)
         cluster_img = cluster_img * 255
-        cluster_img = cluster_img / (k-1)
+        cluster_img = cluster_img / (k - 1)
         cluster_img = cluster_img.astype(np.uint8)
         return cluster_img
 

@@ -4,37 +4,296 @@ output_image_path: ./Output images
 output_statistics_path: ./Output statistics
 processing_steps:
 - {channel: null, file_prefix: cyl01, function: load_image_set, return_batch_name: batch1}
-- {arg_batch_name: batch1, function: k_means_clustering, k: 3, return_batch_name: batch12,
+- {arg_batch_name: batch1, function: edge_detect, method: prewitt, return_direction_batch_name: batch3,
+  return_magnitude_batch_name: batch2}
+- {arg_batch_name: batch1, function: edge_detect, method: sobel, return_direction_batch_name: batch5,
+  return_magnitude_batch_name: batch4}
+- {arg_batch_name: batch1, function: edge_detect, method: compass, return_direction_batch_name: batch7,
+  return_magnitude_batch_name: batch6}
+- {arg_batch_name: batch1, bin_thresh: 128, function: binary_thresh, return_batch_name: batch8}
+- arg_batch_name: batch8
+  function: dilation
+  hot_x: 1
+  hot_y: 1
+  return_batch_name: batch9
+  strel:
+  - [0, 1, 0]
+  - [1, 1, 1]
+  - [0, 1, 0]
+- arg_batch_name: batch8
+  function: erosion
+  hot_x: 1
+  hot_y: 1
+  return_batch_name: batch10
+  strel:
+  - [0, 1, 0]
+  - [1, 1, 1]
+  - [0, 1, 0]
+- {arg_batch_name: batch1, function: k_means_clustering, k: 5, return_batch_name: batch11,
+  use_loc: false}
+- {arg_batch_name: batch1, function: k_means_clustering, k: 5, return_batch_name: batch12,
   use_loc: true}
 - {arg_batch_name: batch1, file_prefix: cyl01_greyscale, function: save_image_set}
+- {arg_batch_name: batch2, file_prefix: cyl01_prewitt_edge_mag, function: save_image_set}
+- {arg_batch_name: batch3, file_prefix: cyl01_prewitt_edge_dir, function: save_image_set}
+- {arg_batch_name: batch4, file_prefix: cyl01_sobel_edge_mag, function: save_image_set}
+- {arg_batch_name: batch5, file_prefix: cyl01_sobel_edge_dir, function: save_image_set}
+- {arg_batch_name: batch6, file_prefix: cyl01_compass_edge_mag, function: save_image_set}
+- {arg_batch_name: batch7, file_prefix: cyl01_compass_edge_dir, function: save_image_set}
+- {arg_batch_name: batch8, file_prefix: cyl01_binary_thresh, function: save_image_set}
+- {arg_batch_name: batch9, file_prefix: cyl01_dilation, function: save_image_set}
+- {arg_batch_name: batch10, file_prefix: cyl01_erosion, function: save_image_set}
+- {arg_batch_name: batch11, file_prefix: cyl01_k_means_no_loc, function: save_image_set}
 - {arg_batch_name: batch12, file_prefix: cyl01_k_means_with_loc, function: save_image_set}
 - {channel: null, file_prefix: inter01, function: load_image_set, return_batch_name: batch1}
-- {arg_batch_name: batch1, function: k_means_clustering, k: 3, return_batch_name: batch12,
+- {arg_batch_name: batch1, function: edge_detect, method: prewitt, return_direction_batch_name: batch3,
+  return_magnitude_batch_name: batch2}
+- {arg_batch_name: batch1, function: edge_detect, method: sobel, return_direction_batch_name: batch5,
+  return_magnitude_batch_name: batch4}
+- {arg_batch_name: batch1, function: edge_detect, method: compass, return_direction_batch_name: batch7,
+  return_magnitude_batch_name: batch6}
+- {arg_batch_name: batch1, bin_thresh: 128, function: binary_thresh, return_batch_name: batch8}
+- arg_batch_name: batch8
+  function: dilation
+  hot_x: 1
+  hot_y: 1
+  return_batch_name: batch9
+  strel:
+  - [0, 1, 0]
+  - [1, 1, 1]
+  - [0, 1, 0]
+- arg_batch_name: batch8
+  function: erosion
+  hot_x: 1
+  hot_y: 1
+  return_batch_name: batch10
+  strel:
+  - [0, 1, 0]
+  - [1, 1, 1]
+  - [0, 1, 0]
+- {arg_batch_name: batch1, function: k_means_clustering, k: 5, return_batch_name: batch11,
+  use_loc: false}
+- {arg_batch_name: batch1, function: k_means_clustering, k: 5, return_batch_name: batch12,
   use_loc: true}
 - {arg_batch_name: batch1, file_prefix: inter01_greyscale, function: save_image_set}
+- {arg_batch_name: batch2, file_prefix: inter01_prewitt_edge_mag, function: save_image_set}
+- {arg_batch_name: batch3, file_prefix: inter01_prewitt_edge_dir, function: save_image_set}
+- {arg_batch_name: batch4, file_prefix: inter01_sobel_edge_mag, function: save_image_set}
+- {arg_batch_name: batch5, file_prefix: inter01_sobel_edge_dir, function: save_image_set}
+- {arg_batch_name: batch6, file_prefix: inter01_compass_edge_mag, function: save_image_set}
+- {arg_batch_name: batch7, file_prefix: inter01_compass_edge_dir, function: save_image_set}
+- {arg_batch_name: batch8, file_prefix: inter01_binary_thresh, function: save_image_set}
+- {arg_batch_name: batch9, file_prefix: inter01_dilation, function: save_image_set}
+- {arg_batch_name: batch10, file_prefix: inter01_erosion, function: save_image_set}
+- {arg_batch_name: batch11, file_prefix: inter01_k_means_no_loc, function: save_image_set}
 - {arg_batch_name: batch12, file_prefix: inter01_k_means_with_loc, function: save_image_set}
 - {channel: null, file_prefix: let01, function: load_image_set, return_batch_name: batch1}
-- {arg_batch_name: batch1, function: k_means_clustering, k: 3, return_batch_name: batch12,
+- {arg_batch_name: batch1, function: edge_detect, method: prewitt, return_direction_batch_name: batch3,
+  return_magnitude_batch_name: batch2}
+- {arg_batch_name: batch1, function: edge_detect, method: sobel, return_direction_batch_name: batch5,
+  return_magnitude_batch_name: batch4}
+- {arg_batch_name: batch1, function: edge_detect, method: compass, return_direction_batch_name: batch7,
+  return_magnitude_batch_name: batch6}
+- {arg_batch_name: batch1, bin_thresh: 128, function: binary_thresh, return_batch_name: batch8}
+- arg_batch_name: batch8
+  function: dilation
+  hot_x: 1
+  hot_y: 1
+  return_batch_name: batch9
+  strel:
+  - [0, 1, 0]
+  - [1, 1, 1]
+  - [0, 1, 0]
+- arg_batch_name: batch8
+  function: erosion
+  hot_x: 1
+  hot_y: 1
+  return_batch_name: batch10
+  strel:
+  - [0, 1, 0]
+  - [1, 1, 1]
+  - [0, 1, 0]
+- {arg_batch_name: batch1, function: k_means_clustering, k: 5, return_batch_name: batch11,
+  use_loc: false}
+- {arg_batch_name: batch1, function: k_means_clustering, k: 5, return_batch_name: batch12,
   use_loc: true}
 - {arg_batch_name: batch1, file_prefix: let01_greyscale, function: save_image_set}
+- {arg_batch_name: batch2, file_prefix: let01_prewitt_edge_mag, function: save_image_set}
+- {arg_batch_name: batch3, file_prefix: let01_prewitt_edge_dir, function: save_image_set}
+- {arg_batch_name: batch4, file_prefix: let01_sobel_edge_mag, function: save_image_set}
+- {arg_batch_name: batch5, file_prefix: let01_sobel_edge_dir, function: save_image_set}
+- {arg_batch_name: batch6, file_prefix: let01_compass_edge_mag, function: save_image_set}
+- {arg_batch_name: batch7, file_prefix: let01_compass_edge_dir, function: save_image_set}
+- {arg_batch_name: batch8, file_prefix: let01_binary_thresh, function: save_image_set}
+- {arg_batch_name: batch9, file_prefix: let01_dilation, function: save_image_set}
+- {arg_batch_name: batch10, file_prefix: let01_erosion, function: save_image_set}
+- {arg_batch_name: batch11, file_prefix: let01_k_means_no_loc, function: save_image_set}
 - {arg_batch_name: batch12, file_prefix: let01_k_means_with_loc, function: save_image_set}
 - {channel: null, file_prefix: mod01, function: load_image_set, return_batch_name: batch1}
-- {arg_batch_name: batch1, function: k_means_clustering, k: 3, return_batch_name: batch12,
+- {arg_batch_name: batch1, function: edge_detect, method: prewitt, return_direction_batch_name: batch3,
+  return_magnitude_batch_name: batch2}
+- {arg_batch_name: batch1, function: edge_detect, method: sobel, return_direction_batch_name: batch5,
+  return_magnitude_batch_name: batch4}
+- {arg_batch_name: batch1, function: edge_detect, method: compass, return_direction_batch_name: batch7,
+  return_magnitude_batch_name: batch6}
+- {arg_batch_name: batch1, bin_thresh: 128, function: binary_thresh, return_batch_name: batch8}
+- arg_batch_name: batch8
+  function: dilation
+  hot_x: 1
+  hot_y: 1
+  return_batch_name: batch9
+  strel:
+  - [0, 1, 0]
+  - [1, 1, 1]
+  - [0, 1, 0]
+- arg_batch_name: batch8
+  function: erosion
+  hot_x: 1
+  hot_y: 1
+  return_batch_name: batch10
+  strel:
+  - [0, 1, 0]
+  - [1, 1, 1]
+  - [0, 1, 0]
+- {arg_batch_name: batch1, function: k_means_clustering, k: 5, return_batch_name: batch11,
+  use_loc: false}
+- {arg_batch_name: batch1, function: k_means_clustering, k: 5, return_batch_name: batch12,
   use_loc: true}
 - {arg_batch_name: batch1, file_prefix: mod01_greyscale, function: save_image_set}
+- {arg_batch_name: batch2, file_prefix: mod01_prewitt_edge_mag, function: save_image_set}
+- {arg_batch_name: batch3, file_prefix: mod01_prewitt_edge_dir, function: save_image_set}
+- {arg_batch_name: batch4, file_prefix: mod01_sobel_edge_mag, function: save_image_set}
+- {arg_batch_name: batch5, file_prefix: mod01_sobel_edge_dir, function: save_image_set}
+- {arg_batch_name: batch6, file_prefix: mod01_compass_edge_mag, function: save_image_set}
+- {arg_batch_name: batch7, file_prefix: mod01_compass_edge_dir, function: save_image_set}
+- {arg_batch_name: batch8, file_prefix: mod01_binary_thresh, function: save_image_set}
+- {arg_batch_name: batch9, file_prefix: mod01_dilation, function: save_image_set}
+- {arg_batch_name: batch10, file_prefix: mod01_erosion, function: save_image_set}
+- {arg_batch_name: batch11, file_prefix: mod01_k_means_no_loc, function: save_image_set}
 - {arg_batch_name: batch12, file_prefix: mod01_k_means_with_loc, function: save_image_set}
 - {channel: null, file_prefix: para01, function: load_image_set, return_batch_name: batch1}
-- {arg_batch_name: batch1, function: k_means_clustering, k: 3, return_batch_name: batch12,
+- {arg_batch_name: batch1, function: edge_detect, method: prewitt, return_direction_batch_name: batch3,
+  return_magnitude_batch_name: batch2}
+- {arg_batch_name: batch1, function: edge_detect, method: sobel, return_direction_batch_name: batch5,
+  return_magnitude_batch_name: batch4}
+- {arg_batch_name: batch1, function: edge_detect, method: compass, return_direction_batch_name: batch7,
+  return_magnitude_batch_name: batch6}
+- {arg_batch_name: batch1, bin_thresh: 128, function: binary_thresh, return_batch_name: batch8}
+- arg_batch_name: batch8
+  function: dilation
+  hot_x: 1
+  hot_y: 1
+  return_batch_name: batch9
+  strel:
+  - [0, 1, 0]
+  - [1, 1, 1]
+  - [0, 1, 0]
+- arg_batch_name: batch8
+  function: erosion
+  hot_x: 1
+  hot_y: 1
+  return_batch_name: batch10
+  strel:
+  - [0, 1, 0]
+  - [1, 1, 1]
+  - [0, 1, 0]
+- {arg_batch_name: batch1, function: k_means_clustering, k: 5, return_batch_name: batch11,
+  use_loc: false}
+- {arg_batch_name: batch1, function: k_means_clustering, k: 5, return_batch_name: batch12,
   use_loc: true}
 - {arg_batch_name: batch1, file_prefix: para01_greyscale, function: save_image_set}
+- {arg_batch_name: batch2, file_prefix: para01_prewitt_edge_mag, function: save_image_set}
+- {arg_batch_name: batch3, file_prefix: para01_prewitt_edge_dir, function: save_image_set}
+- {arg_batch_name: batch4, file_prefix: para01_sobel_edge_mag, function: save_image_set}
+- {arg_batch_name: batch5, file_prefix: para01_sobel_edge_dir, function: save_image_set}
+- {arg_batch_name: batch6, file_prefix: para01_compass_edge_mag, function: save_image_set}
+- {arg_batch_name: batch7, file_prefix: para01_compass_edge_dir, function: save_image_set}
+- {arg_batch_name: batch8, file_prefix: para01_binary_thresh, function: save_image_set}
+- {arg_batch_name: batch9, file_prefix: para01_dilation, function: save_image_set}
+- {arg_batch_name: batch10, file_prefix: para01_erosion, function: save_image_set}
+- {arg_batch_name: batch11, file_prefix: para01_k_means_no_loc, function: save_image_set}
 - {arg_batch_name: batch12, file_prefix: para01_k_means_with_loc, function: save_image_set}
 - {channel: null, file_prefix: super01, function: load_image_set, return_batch_name: batch1}
-- {arg_batch_name: batch1, function: k_means_clustering, k: 3, return_batch_name: batch12,
+- {arg_batch_name: batch1, function: edge_detect, method: prewitt, return_direction_batch_name: batch3,
+  return_magnitude_batch_name: batch2}
+- {arg_batch_name: batch1, function: edge_detect, method: sobel, return_direction_batch_name: batch5,
+  return_magnitude_batch_name: batch4}
+- {arg_batch_name: batch1, function: edge_detect, method: compass, return_direction_batch_name: batch7,
+  return_magnitude_batch_name: batch6}
+- {arg_batch_name: batch1, bin_thresh: 128, function: binary_thresh, return_batch_name: batch8}
+- arg_batch_name: batch8
+  function: dilation
+  hot_x: 1
+  hot_y: 1
+  return_batch_name: batch9
+  strel:
+  - [0, 1, 0]
+  - [1, 1, 1]
+  - [0, 1, 0]
+- arg_batch_name: batch8
+  function: erosion
+  hot_x: 1
+  hot_y: 1
+  return_batch_name: batch10
+  strel:
+  - [0, 1, 0]
+  - [1, 1, 1]
+  - [0, 1, 0]
+- {arg_batch_name: batch1, function: k_means_clustering, k: 5, return_batch_name: batch11,
+  use_loc: false}
+- {arg_batch_name: batch1, function: k_means_clustering, k: 5, return_batch_name: batch12,
   use_loc: true}
 - {arg_batch_name: batch1, file_prefix: super01_greyscale, function: save_image_set}
+- {arg_batch_name: batch2, file_prefix: super01_prewitt_edge_mag, function: save_image_set}
+- {arg_batch_name: batch3, file_prefix: super01_prewitt_edge_dir, function: save_image_set}
+- {arg_batch_name: batch4, file_prefix: super01_sobel_edge_mag, function: save_image_set}
+- {arg_batch_name: batch5, file_prefix: super01_sobel_edge_dir, function: save_image_set}
+- {arg_batch_name: batch6, file_prefix: super01_compass_edge_mag, function: save_image_set}
+- {arg_batch_name: batch7, file_prefix: super01_compass_edge_dir, function: save_image_set}
+- {arg_batch_name: batch8, file_prefix: super01_binary_thresh, function: save_image_set}
+- {arg_batch_name: batch9, file_prefix: super01_dilation, function: save_image_set}
+- {arg_batch_name: batch10, file_prefix: super01_erosion, function: save_image_set}
+- {arg_batch_name: batch11, file_prefix: super01_k_means_no_loc, function: save_image_set}
 - {arg_batch_name: batch12, file_prefix: super01_k_means_with_loc, function: save_image_set}
 - {channel: null, file_prefix: svar01, function: load_image_set, return_batch_name: batch1}
-- {arg_batch_name: batch1, function: k_means_clustering, k: 3, return_batch_name: batch12,
+- {arg_batch_name: batch1, function: edge_detect, method: prewitt, return_direction_batch_name: batch3,
+  return_magnitude_batch_name: batch2}
+- {arg_batch_name: batch1, function: edge_detect, method: sobel, return_direction_batch_name: batch5,
+  return_magnitude_batch_name: batch4}
+- {arg_batch_name: batch1, function: edge_detect, method: compass, return_direction_batch_name: batch7,
+  return_magnitude_batch_name: batch6}
+- {arg_batch_name: batch1, bin_thresh: 128, function: binary_thresh, return_batch_name: batch8}
+- arg_batch_name: batch8
+  function: dilation
+  hot_x: 1
+  hot_y: 1
+  return_batch_name: batch9
+  strel:
+  - [0, 1, 0]
+  - [1, 1, 1]
+  - [0, 1, 0]
+- arg_batch_name: batch8
+  function: erosion
+  hot_x: 1
+  hot_y: 1
+  return_batch_name: batch10
+  strel:
+  - [0, 1, 0]
+  - [1, 1, 1]
+  - [0, 1, 0]
+- {arg_batch_name: batch1, function: k_means_clustering, k: 5, return_batch_name: batch11,
+  use_loc: false}
+- {arg_batch_name: batch1, function: k_means_clustering, k: 5, return_batch_name: batch12,
   use_loc: true}
 - {arg_batch_name: batch1, file_prefix: svar01_greyscale, function: save_image_set}
+- {arg_batch_name: batch2, file_prefix: svar01_prewitt_edge_mag, function: save_image_set}
+- {arg_batch_name: batch3, file_prefix: svar01_prewitt_edge_dir, function: save_image_set}
+- {arg_batch_name: batch4, file_prefix: svar01_sobel_edge_mag, function: save_image_set}
+- {arg_batch_name: batch5, file_prefix: svar01_sobel_edge_dir, function: save_image_set}
+- {arg_batch_name: batch6, file_prefix: svar01_compass_edge_mag, function: save_image_set}
+- {arg_batch_name: batch7, file_prefix: svar01_compass_edge_dir, function: save_image_set}
+- {arg_batch_name: batch8, file_prefix: svar01_binary_thresh, function: save_image_set}
+- {arg_batch_name: batch9, file_prefix: svar01_dilation, function: save_image_set}
+- {arg_batch_name: batch10, file_prefix: svar01_erosion, function: save_image_set}
+- {arg_batch_name: batch11, file_prefix: svar01_k_means_no_loc, function: save_image_set}
 - {arg_batch_name: batch12, file_prefix: svar01_k_means_with_loc, function: save_image_set}
