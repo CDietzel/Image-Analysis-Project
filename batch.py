@@ -328,16 +328,15 @@ class BatchProcessor:
                 stats_data = [function_name, stats]
                 self._statistics.append(stats_data)
 
-            elif function_name == "binary_thresh":
+            elif function_name == "histogram_thresh":
                 batch_name = step["arg_batch_name"]
                 return_name = step["return_batch_name"]
-                bin_thresh = step["bin_thresh"]
                 image_list = self._image_sets[batch_name]
                 new_image_list = []
                 runtime_list = []
                 for image in image_list:
                     image_start_time = time.time()
-                    new_image_list.append(self._m.binary_thresh(image, bin_thresh))
+                    new_image_list.append(self._m.histogram_thresh(image))
                     image_elapsed = time.time() - image_start_time
                     runtime_list.append(image_elapsed)
                 self._image_sets[return_name] = new_image_list

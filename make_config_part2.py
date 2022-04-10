@@ -68,10 +68,9 @@ if __name__ == "__main__":
         processing_steps.append(step)
 
         step = {}
-        step["function"] = "binary_thresh"
+        step["function"] = "histogram_thresh"
         step["arg_batch_name"] = "batch1"
         step["return_batch_name"] = "batch8"
-        step["bin_thresh"] = 128
         processing_steps.append(step)
 
         step = {}
@@ -111,7 +110,7 @@ if __name__ == "__main__":
         step = {}
         step["function"] = "save_image_set"
         step["arg_batch_name"] = "batch1"
-        step["file_prefix"] = prefix + "_greyscale"
+        step["file_prefix"] = prefix + "_grayscale"
         processing_steps.append(step)
 
         step = {}
@@ -153,7 +152,7 @@ if __name__ == "__main__":
         step = {}
         step["function"] = "save_image_set"
         step["arg_batch_name"] = "batch8"
-        step["file_prefix"] = prefix + "_binary_thresh"
+        step["file_prefix"] = prefix + "_histogram_thresh"
         processing_steps.append(step)
 
         step = {}

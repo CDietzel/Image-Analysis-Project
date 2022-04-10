@@ -4,6 +4,7 @@ import numpy as np
 from numpy.random import default_rng
 import random
 import copy
+import math
 
 
 class ImageManipulator:
@@ -30,7 +31,7 @@ class ImageManipulator:
         hist = np.zeros(256)
         for i in range(len(hist)):
             hist[i] = np.sum(gray_img == i)
-        hist = hist.astype(np.uint8)
+        hist = hist.astype(np.uint)
         return hist
 
     def avg_histograms(self, hist_list):
@@ -144,7 +145,7 @@ class ImageManipulator:
             dir = np.argmax(dstack, axis=0)
             dir = (dir * np.pi) / 4  # normalize to 0-2pi scale
         dir = (dir * 255) / (np.pi * 2)  # re-normalize to 0-255 scale for easy viewing
-        mag = mag * 10 # scaling factor so that the magnitude image is actually visible
+        mag = mag * 10  # scaling factor so that the magnitude image is actually visible
         mag = np.rint(mag)
         mag = mag.astype(np.uint8)
         dir = np.rint(dir)
@@ -203,8 +204,97 @@ class ImageManipulator:
         ero_img = ero_img.astype(np.uint8)
         return ero_img
 
-    def binary_thresh(self, gray_img, bin_thresh):
-        thresh_img = gray_img < bin_thresh
+    def histogram_thresh(self, gray_img):
+        limit = 256
+        var_w = []
+        prob = []
+        prior_o = []
+        prior_b = []
+        mean_o = []
+        mean_b = []
+        var_o = []
+        var_b = []
+        wgv = []
+        hist = self.calc_histogram(gray_img)
+        for i in range(limit):
+            p = hist[i] / np.sum(hist)
+            prob.append(p)
+
+        for T in range(limit):
+            prior = 0
+            for i in range(0, T + 1):
+                prior += prob[i]
+            prior_o.append(prior)
+
+        for T in range(limit):
+            prior = 0
+            for i in range(T + 1, 256):
+                prior += prob[i]
+            prior_b.append(prior)
+
+        for T in range(limit):
+            mean = 0
+            for i in range(0, T + 1):
+                mean += i * prob[i]
+            divisor = prior_o[T]
+            if divisor == 0:
+                result = 0
+            else:
+                result = mean / divisor
+            if math.isnan(result):
+                result = 0
+            mean_o.append(result)
+
+        for T in range(limit):
+            mean = 0
+            for i in range(T + 1, 256):
+                mean += i * prob[i]
+            divisor = prior_b[T]
+            if divisor == 0:
+                result = 0
+            else:
+                result = mean / divisor
+            if math.isnan(result):
+                result = 0
+            mean_b.append(result)
+
+        for T in range(limit):
+            var = 0
+            for i in range(0, T + 1):
+                var += ((i - mean_o[T]) ** 2) * prob[i]
+            divisor = prior_o[T]
+            if divisor == 0:
+                result = 0
+            else:
+                result = var / divisor
+            if math.isnan(result):
+                result = 0
+            var_o.append(result)
+
+        for T in range(limit):
+            var = 0
+            for i in range(T + 1, 256):
+                var += ((i - mean_b[T]) ** 2) * prob[i]
+            divisor = prior_b[T]
+            if divisor == 0:
+                result = 0
+            else:
+                result = var / divisor
+            if math.isnan(result):
+                result = 0
+            var_b.append(result)
+
+        for T in range(limit):
+            var_o_t = var_o[T]
+            prior_o_t = prior_o[T]
+            var_b_t = var_b[T]
+            prior_b_t = prior_b[T]
+            var_w = var_o_t * prior_o_t + var_b_t * prior_b_t
+            wgv.append(var_w)
+
+        wgv = np.array(wgv)
+        T = np.argmin(wgv)
+        thresh_img = gray_img < T
         thresh_img = thresh_img * 255
         thresh_img = thresh_img.astype(np.uint8)
         return thresh_img
@@ -212,15 +302,6 @@ class ImageManipulator:
     def k_means_clustering(self, gray_img, k, use_loc=True):
         h, w = gray_img.shape
         cluster_img = np.zeros(gray_img.shape)
-        # clusters = []
-        # for cluster in range(k):
-        #     p = []
-        #     p.append(random.uniform(0, 255))
-        #     if use_loc:
-        #         p.append(random.uniform(0, h - 1))
-        #         p.append(random.uniform(0, w - 1))
-        #     clusters.append(p)
-        # clusters = np.array(clusters)
         clusters = []
         metric_arr = np.expand_dims(gray_img, axis=-1)
         if use_loc:
@@ -242,7 +323,7 @@ class ImageManipulator:
                 diff = metric_arr - cluster
                 if use_loc:
                     diff = diff.astype(float)
-                    diff[:, :, 1:3] *= 0.05 # scaling factor so that the pixel position
+                    diff[:, :, 1:3] *= 0.05  # scaling factor so that the pixel position
                     # error doesn't overwhelm the pixel value error
                 cluster_diff = np.linalg.norm(diff, axis=-1)
                 dist.append(cluster_diff)
