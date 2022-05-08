@@ -33,6 +33,10 @@ class BatchProcessor:
         Path(stats_path).mkdir(parents=True, exist_ok=True)
         for f in os.listdir(stats_path):
             os.remove(os.path.join(stats_path, f))
+        datasets_path = self._config["output_datasets_path"]
+        Path(datasets_path).mkdir(parents=True, exist_ok=True)
+        for f in os.listdir(datasets_path):
+            os.remove(os.path.join(datasets_path, f))
         hist_path = self._config["histogram_path"]
         Path(hist_path).mkdir(parents=True, exist_ok=True)
         for f in os.listdir(hist_path):
@@ -371,6 +375,8 @@ class BatchProcessor:
                 }
                 stats_data = [function_name, stats]
                 self._statistics.append(stats_data)
+
+            elif function_name == ""
 
             else:
                 raise ValueError(

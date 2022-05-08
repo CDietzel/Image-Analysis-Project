@@ -1,5 +1,5 @@
 from cgitb import grey
-from matplotlib.pyplot import axis, close
+from matplotlib.pyplot import axis, close, hot
 import numpy as np
 from numpy.random import default_rng
 import random
@@ -299,7 +299,7 @@ class ImageManipulator:
         thresh_img = thresh_img.astype(np.uint8)
         return thresh_img
 
-    def k_means_clustering(self, gray_img, k, use_loc=True):
+    def k_means_clustering(self, gray_img, k, use_loc=True, init_clust=None):
         h, w = gray_img.shape
         cluster_img = np.zeros(gray_img.shape)
         clusters = []
@@ -309,7 +309,10 @@ class ImageManipulator:
             metric_arr = np.dstack((metric_arr, pos_grid))
         metric_arr = metric_arr.reshape(h * w, -1)
         metric_arr = np.unique(metric_arr, axis=0)
-        clusters = self._rng.choice(metric_arr, k, replace=False, axis=0)
+        if init_clust is None:
+            clusters = self._rng.choice(metric_arr, k, replace=False, axis=0)
+        else:
+            clusters = np.array(init_clust)
 
         not_done = True
         while not_done:
@@ -344,11 +347,35 @@ class ImageManipulator:
         cluster_img = cluster_img.astype(np.uint8)
         return cluster_img
 
+    def extract_features(self, gray_img):
+        seg_img = self.k_means_clustering(
+            gray_img, 2, use_loc=False, init_clust=[[40], [0]]
+        )
+        # compute area of cell:
+        area = np.count_nonzero(seg_img)
+        # compute perimeter of cell:
+        ero_seg_img = self.erosion(
+            seg_img, strel=[[0, 1, 0], [1, 1, 1], [0, 1, 0]], hot_x=1, hot_y=1
+        )
+        int_bound = np.logical_xor(seg_img, ero_seg_img)
+        perimeter = np.count_nonzero(int_bound)
+        # compute median cell pixel magnitude:
+        mask = seg_img == 0
+        mask_img = np.ma.array(gray_img, mask=mask)
+        median = np.ma.median(mask_img)
+        # compute standard deviation of cell pixel magnitudes:
+        std = np.ma.std(mask_img)
+        feature_vector = [area, perimeter, median, std]
+        return feature_vector
 
-# if __name__ == "__main__":
-#     q = ImageManipulator()
-#     img = np.array(
-#         [[7, 15, 21, 13], [31, 22, 25, 23], [13, 18, 10, 16], [25, 24, 29, 18]]
-#     )
-#     mag, dir = q.edge_detect(img, method="compass")
-#     pass
+
+if __name__ == "__main__":
+    q = ImageManipulator()
+    # img = np.array(
+    #     [[7, 15, 21, 13], [31, 22, 25, 23], [13, 18, 10, 16], [25, 24, 29, 18]]
+    # )
+    img = np.array(
+        [[5, 15, 5, 15], [15, 5, 15, 5], [5, 15, 5, 15], [35, 25, 35, 25]]
+    )
+    feature_vector = q.extract_features(img)
+    pass
