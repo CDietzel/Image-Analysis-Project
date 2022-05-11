@@ -7,6 +7,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import yaml
 from skimage import io
+import pandas as pd
 
 from manip import ImageManipulator
 
@@ -24,6 +25,7 @@ class BatchProcessor:
                 self._config = yaml.safe_load(file)
         self._image_sets = {}
         self._statistics = []
+        self._datasets = {}
         self._m = ImageManipulator()
         save_path = self._config["output_image_path"]
         Path(save_path).mkdir(parents=True, exist_ok=True)
@@ -376,7 +378,50 @@ class BatchProcessor:
                 stats_data = [function_name, stats]
                 self._statistics.append(stats_data)
 
-            elif function_name == ""
+            elif function_name == "extract_features":
+                batch_name = step["arg_batch_name"]
+                dataset_name = step["dataset_name"]
+                prefix = step["file_prefix"]
+                preprefix = prefix[0:3]
+                label = prefix
+                if preprefix == "cyl":
+                    label = "Columnar Epithelial"
+                elif preprefix == "int":
+                    label = "Intermediate Squamous Epithelial"
+                elif preprefix == "let":
+                    label == "Mild Nonkeratinizing Dysplastic"
+                elif preprefix == "mod":
+                    label = "Moderate Nonkeratinizing Dysplastic"
+                elif preprefix == "par":
+                    label = "Parabasal Squamous Epithelial"
+                elif preprefix == "sup":
+                    label = "Superficial Squamous Epithelial"
+                elif preprefix == "sva":
+                    label = "Severe Nonkeratinizing Dysplastic"
+                image_list = self._image_sets[batch_name]
+                dataset = self._datasets.get(dataset_name, pd.DataFrame(columns=["Area", "Perimeter", "Median", "Standard Deviation", "Label"]))
+                for image in image_list:
+                    image_start_time = time.time()
+                    new_hist_list.append(self._m.calc_histogram(image).tolist())
+                    image_elapsed = time.time() - image_start_time
+                    runtime_list.append(image_elapsed)
+                new_avg_hist = self._m.avg_histograms(new_hist_list).tolist()
+                batch_elapsed = time.time() - batch_start_time
+                avg_runtime = statistics.mean(runtime_list)
+                stats = {
+                    "entire_batch_runtime": batch_elapsed,
+                    "avg_image_runtime": avg_runtime,
+                }
+                stats_data = [function_name, stats]
+                self._statistics.append(stats_data)
+                out_path = os.path.join(hist_path, prefix + str(0) + ".png")
+                plt.bar(range(256), new_hist_list[0], width=1)
+                plt.savefig(out_path)
+                plt.clf()
+                out_path = os.path.join(hist_path, "avg_" + prefix + ".png")
+                plt.bar(range(256), new_avg_hist, width=1)
+                plt.savefig(out_path)
+                plt.clf()
 
             else:
                 raise ValueError(

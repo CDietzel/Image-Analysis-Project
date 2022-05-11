@@ -369,13 +369,13 @@ class ImageManipulator:
         return feature_vector
 
 
-if __name__ == "__main__":
-    q = ImageManipulator()
-    # img = np.array(
-    #     [[7, 15, 21, 13], [31, 22, 25, 23], [13, 18, 10, 16], [25, 24, 29, 18]]
-    # )
-    img = np.array(
-        [[5, 15, 5, 15], [15, 5, 15, 5], [5, 15, 5, 15], [35, 25, 35, 25]]
-    )
-    feature_vector = q.extract_features(img)
-    pass
+# if __name__ == "__main__":
+#     q = ImageManipulator()
+#     # img = np.array(
+#     #     [[7, 15, 21, 13], [31, 22, 25, 23], [13, 18, 10, 16], [25, 24, 29, 18]]
+#     # )
+#     img = np.array(
+#         [[5, 15, 5, 15], [15, 5, 15, 5], [5, 15, 5, 15], [35, 25, 35, 25]]
+#     )
+#     feature_vector = q.extract_features(img)
+#     pass
