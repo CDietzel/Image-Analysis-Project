@@ -1,13 +1,14 @@
 import os
 import statistics
 import time
+from collections import Counter
 from pathlib import Path
 
 import numpy as np
-from matplotlib import pyplot as plt
-import yaml
-from skimage import io
 import pandas as pd
+import yaml
+from matplotlib import pyplot as plt
+from skimage import io
 
 from manip import ImageManipulator
 
@@ -37,8 +38,9 @@ class BatchProcessor:
             os.remove(os.path.join(stats_path, f))
         datasets_path = self._config["output_datasets_path"]
         Path(datasets_path).mkdir(parents=True, exist_ok=True)
-        for f in os.listdir(datasets_path):
-            os.remove(os.path.join(datasets_path, f))
+        # Don't always delete the datasets for no reason
+        # for f in os.listdir(datasets_path):
+        #     os.remove(os.path.join(datasets_path, f))
         hist_path = self._config["histogram_path"]
         Path(hist_path).mkdir(parents=True, exist_ok=True)
         for f in os.listdir(hist_path):
@@ -389,7 +391,7 @@ class BatchProcessor:
                 elif preprefix == "int":
                     label = "Intermediate Squamous Epithelial"
                 elif preprefix == "let":
-                    label == "Mild Nonkeratinizing Dysplastic"
+                    label = "Mild Nonkeratinizing Dysplastic"
                 elif preprefix == "mod":
                     label = "Moderate Nonkeratinizing Dysplastic"
                 elif preprefix == "par":
@@ -399,13 +401,27 @@ class BatchProcessor:
                 elif preprefix == "sva":
                     label = "Severe Nonkeratinizing Dysplastic"
                 image_list = self._image_sets[batch_name]
-                dataset = self._datasets.get(dataset_name, pd.DataFrame(columns=["Area", "Perimeter", "Median", "Standard Deviation", "Label"]))
+                dataset = self._datasets.get(
+                    dataset_name,
+                    pd.DataFrame(
+                        columns=[
+                            "Area",
+                            "Perimeter",
+                            "Median",
+                            "Standard Deviation",
+                            "Label",
+                        ]
+                    ),
+                )
+                runtime_list = []
                 for image in image_list:
                     image_start_time = time.time()
-                    new_hist_list.append(self._m.calc_histogram(image).tolist())
+                    features = self._m.extract_features(image)
+                    features.append(label)
+                    dataset.loc[len(dataset)] = features
                     image_elapsed = time.time() - image_start_time
                     runtime_list.append(image_elapsed)
-                new_avg_hist = self._m.avg_histograms(new_hist_list).tolist()
+                self._datasets[dataset_name] = dataset
                 batch_elapsed = time.time() - batch_start_time
                 avg_runtime = statistics.mean(runtime_list)
                 stats = {
@@ -414,14 +430,42 @@ class BatchProcessor:
                 }
                 stats_data = [function_name, stats]
                 self._statistics.append(stats_data)
-                out_path = os.path.join(hist_path, prefix + str(0) + ".png")
-                plt.bar(range(256), new_hist_list[0], width=1)
-                plt.savefig(out_path)
-                plt.clf()
-                out_path = os.path.join(hist_path, "avg_" + prefix + ".png")
-                plt.bar(range(256), new_avg_hist, width=1)
-                plt.savefig(out_path)
-                plt.clf()
+
+            elif function_name == "load_dataset":
+                read_path = self._config["output_datasets_path"]
+                file_name = step["file_name"]
+                dataset_name = step["dataset_name"]
+                in_path = os.path.join(read_path, file_name + ".csv")
+                in_path = Path(in_path)
+                dataset = pd.read_csv(in_path)
+                self._datasets[dataset_name] = dataset
+
+            elif function_name == "save_dataset":
+                save_path = self._config["output_datasets_path"]
+                file_name = step["file_name"]
+                dataset_name = step["dataset_name"]
+                dataset = self._datasets[dataset_name]
+                out_path = os.path.join(save_path, file_name + ".csv")
+                out_path = Path(out_path)
+                dataset.to_csv(out_path, index=False)
+
+            elif function_name == "k_nearest_neighbors":
+                dataset_name = step["dataset_name"]
+                k = step["k"]
+                n_fold = 10
+                dataset = self._datasets[dataset_name]
+                shuffled = dataset.sample(frac=1)
+                groups = np.array_split(shuffled, n_fold)
+                accuracy_list =[]
+                for i in range(len(groups)):
+                    validation = groups[i]
+                    train_list = groups.copy()
+                    del train_list[i]
+                    training = pd.concat(train_list)
+                    accuracy = self._k_nearest_neighbors(k, training, validation)
+                    accuracy_list.append(accuracy)
+                avg_accuracy = statistics.fmean(accuracy_list)
+                print("with k = " + str(k) + ", accuracy = " + str(avg_accuracy))
 
             else:
                 raise ValueError(
@@ -449,6 +493,36 @@ class BatchProcessor:
         square_error = np.square(error)
         mean_square_error = np.mean(square_error)
         return mean_square_error
+
+    def _k_nearest_neighbors(self, k, train, valid):
+        train = train.reset_index(drop=True)
+        valid = valid.reset_index(drop=True)
+        correct = 0
+        total = 0
+        for i, v_sample in valid.iterrows():
+            valid_data = v_sample[:-1]
+            train_data = train.iloc[:, :-1]
+            diff_data = np.array(train_data) - np.array(valid_data)
+            diff_data = diff_data.astype(float)
+            distance_data = np.linalg.norm(diff_data, axis=1)
+            near_i = distance_data.argsort()[:k]
+            nearest = list(train.iloc[near_i]["Label"])
+            count = Counter(nearest)
+            predicted = count.most_common(1)[0][0]
+            actual = v_sample[-1]
+            if predicted == actual:
+                correct += 1
+            total += 1
+        accuracy = correct/total
+        return accuracy
+
+    # def _euclidean_distance(self, list1, list2):
+    #     d = 0
+    #     for pair in zip(list1, list2):
+    #         diff = pair[0] - pair[1]
+    #         square = diff ** 2
+    #         d += square
+    #     root = math.sqrt(d)
 
 
 if __name__ == "__main__":

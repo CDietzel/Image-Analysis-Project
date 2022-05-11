@@ -349,15 +349,15 @@ class ImageManipulator:
 
     def extract_features(self, gray_img):
         seg_img = self.k_means_clustering(
-            gray_img, 2, use_loc=False, init_clust=[[40], [0]]
+            gray_img, 2, use_loc=False, init_clust=[[255], [0]]
         )
         # compute area of cell:
         area = np.count_nonzero(seg_img)
         # compute perimeter of cell:
-        ero_seg_img = self.erosion(
+        dil_seg_img = self.dilation(
             seg_img, strel=[[0, 1, 0], [1, 1, 1], [0, 1, 0]], hot_x=1, hot_y=1
         )
-        int_bound = np.logical_xor(seg_img, ero_seg_img)
+        int_bound = np.logical_xor(seg_img, dil_seg_img)
         perimeter = np.count_nonzero(int_bound)
         # compute median cell pixel magnitude:
         mask = seg_img == 0

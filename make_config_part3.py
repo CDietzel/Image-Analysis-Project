@@ -29,6 +29,9 @@ if __name__ == "__main__":
     # "bin_thresh": 128 # pixel intensity to use for binary thresholding.
     # "k": 2 # Number of cluster centers to use for K-means clustering
     # "use_loc": True # Choose whether to include pixel x-y location in k-means clustering calculations
+    # "dataset_name": "dataset" # this is the key to use to store that functions input/output dataset
+    # "file_name": "dataset" # This is a string that will make up the filename of the file to save/load
+    #
 
     prefix_list = ["cyl", "inter", "let", "mod", "para", "super", "svar"]
     # This second prefix list will only process the first image from each batch, to save computation time
@@ -45,140 +48,65 @@ if __name__ == "__main__":
         processing_steps.append(step)
 
         step = {}
-        step["function"] = "edge_detect"
+        step["function"] = "extract_features"
         step["arg_batch_name"] = "batch1"
-        step["return_magnitude_batch_name"] = "batch2"
-        step["return_direction_batch_name"] = "batch3"
-        step["method"] = "prewitt"
+        step["dataset_name"] = "dataset"
+        step["file_prefix"] = prefix
         processing_steps.append(step)
 
-        step = {}
-        step["function"] = "edge_detect"
-        step["arg_batch_name"] = "batch1"
-        step["return_magnitude_batch_name"] = "batch4"
-        step["return_direction_batch_name"] = "batch5"
-        step["method"] = "sobel"
-        processing_steps.append(step)
+    step = {}
+    step["function"] = "save_dataset"
+    step["file_name"] = "dataset"
+    step["dataset_name"] = "dataset"
+    processing_steps.append(step)
 
-        step = {}
-        step["function"] = "edge_detect"
-        step["arg_batch_name"] = "batch1"
-        step["return_magnitude_batch_name"] = "batch6"
-        step["return_direction_batch_name"] = "batch7"
-        step["method"] = "compass"
-        processing_steps.append(step)
+    step = {}
+    step["function"] = "load_dataset"
+    step["file_name"] = "dataset"
+    step["dataset_name"] = "dataset"
+    processing_steps.append(step)
 
-        step = {}
-        step["function"] = "histogram_thresh"
-        step["arg_batch_name"] = "batch1"
-        step["return_batch_name"] = "batch8"
-        processing_steps.append(step)
+    step = {}
+    step["function"] = "k_nearest_neighbors"
+    step["dataset_name"] = "dataset"
+    step["k"] = 1
+    processing_steps.append(step)
 
-        step = {}
-        step["function"] = "dilation"
-        step["arg_batch_name"] = "batch8"
-        step["return_batch_name"] = "batch9"
-        step["strel"] = [[0, 1, 0], [1, 1, 1], [0, 1, 0]]
-        step["hot_x"] = 1
-        step["hot_y"] = 1
-        processing_steps.append(step)
+    step = {}
+    step["function"] = "k_nearest_neighbors"
+    step["dataset_name"] = "dataset"
+    step["k"] = 3
+    processing_steps.append(step)
 
-        step = {}
-        step["function"] = "erosion"
-        step["arg_batch_name"] = "batch8"
-        step["return_batch_name"] = "batch10"
-        step["strel"] = [[0, 1, 0], [1, 1, 1], [0, 1, 0]]
-        step["hot_x"] = 1
-        step["hot_y"] = 1
-        processing_steps.append(step)
+    step = {}
+    step["function"] = "k_nearest_neighbors"
+    step["dataset_name"] = "dataset"
+    step["k"] = 5
+    processing_steps.append(step)
 
-        step = {}
-        step["function"] = "k_means_clustering"
-        step["arg_batch_name"] = "batch1"
-        step["return_batch_name"] = "batch11"
-        step["k"] = 5
-        step["use_loc"] = False
-        processing_steps.append(step)
+    step = {}
+    step["function"] = "k_nearest_neighbors"
+    step["dataset_name"] = "dataset"
+    step["k"] = 7
+    processing_steps.append(step)
 
-        step = {}
-        step["function"] = "k_means_clustering"
-        step["arg_batch_name"] = "batch1"
-        step["return_batch_name"] = "batch12"
-        step["k"] = 5
-        step["use_loc"] = True
-        processing_steps.append(step)
+    step = {}
+    step["function"] = "k_nearest_neighbors"
+    step["dataset_name"] = "dataset"
+    step["k"] = 13
+    processing_steps.append(step)
 
-        step = {}
-        step["function"] = "save_image_set"
-        step["arg_batch_name"] = "batch1"
-        step["file_prefix"] = prefix + "_grayscale"
-        processing_steps.append(step)
+    step = {}
+    step["function"] = "k_nearest_neighbors"
+    step["dataset_name"] = "dataset"
+    step["k"] = 21
+    processing_steps.append(step)
 
-        step = {}
-        step["function"] = "save_image_set"
-        step["arg_batch_name"] = "batch2"
-        step["file_prefix"] = prefix + "_prewitt_edge_mag"
-        processing_steps.append(step)
-
-        step = {}
-        step["function"] = "save_image_set"
-        step["arg_batch_name"] = "batch3"
-        step["file_prefix"] = prefix + "_prewitt_edge_dir"
-        processing_steps.append(step)
-
-        step = {}
-        step["function"] = "save_image_set"
-        step["arg_batch_name"] = "batch4"
-        step["file_prefix"] = prefix + "_sobel_edge_mag"
-        processing_steps.append(step)
-
-        step = {}
-        step["function"] = "save_image_set"
-        step["arg_batch_name"] = "batch5"
-        step["file_prefix"] = prefix + "_sobel_edge_dir"
-        processing_steps.append(step)
-
-        step = {}
-        step["function"] = "save_image_set"
-        step["arg_batch_name"] = "batch6"
-        step["file_prefix"] = prefix + "_compass_edge_mag"
-        processing_steps.append(step)
-
-        step = {}
-        step["function"] = "save_image_set"
-        step["arg_batch_name"] = "batch7"
-        step["file_prefix"] = prefix + "_compass_edge_dir"
-        processing_steps.append(step)
-
-        step = {}
-        step["function"] = "save_image_set"
-        step["arg_batch_name"] = "batch8"
-        step["file_prefix"] = prefix + "_histogram_thresh"
-        processing_steps.append(step)
-
-        step = {}
-        step["function"] = "save_image_set"
-        step["arg_batch_name"] = "batch9"
-        step["file_prefix"] = prefix + "_dilation"
-        processing_steps.append(step)
-
-        step = {}
-        step["function"] = "save_image_set"
-        step["arg_batch_name"] = "batch10"
-        step["file_prefix"] = prefix + "_erosion"
-        processing_steps.append(step)
-
-        step = {}
-        step["function"] = "save_image_set"
-        step["arg_batch_name"] = "batch11"
-        step["file_prefix"] = prefix + "_k_means_no_loc"
-        processing_steps.append(step)
-
-        step = {}
-        step["function"] = "save_image_set"
-        step["arg_batch_name"] = "batch12"
-        step["file_prefix"] = prefix + "_k_means_with_loc"
-        processing_steps.append(step)
+    step = {}
+    step["function"] = "k_nearest_neighbors"
+    step["dataset_name"] = "dataset"
+    step["k"] = 99
+    processing_steps.append(step)
 
     config_dict["processing_steps"] = processing_steps
 
